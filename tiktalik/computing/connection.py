@@ -1,0 +1,192 @@
+import json
+
+from tiktalik.computing.objects import *
+from ..error import TiktalikAPIError
+from ..connection import TiktalikAuthConnection
+
+class ComputingConnection(TiktalikAuthConnection):
+	"""
+	Performs API calls. All method raise TiktalikAPIError on errors.
+	"""
+
+	def _url(self, path):
+		return "/api/v1/computing" + path
+
+	def request(self, method, path, params=None, query_params=None):
+		"""
+		Send a request over HTTP.
+
+		:type method: string
+		:param method: HTTP method to use (GET, POST etc.)
+
+		:type path: string
+		:param path: path to be requested from server
+
+		:type params: dict
+		:param params: a dictionary of parameters sent in request body
+
+		:type query_params: dict
+		:param query_params: a dictionary of parameters sent in request path
+
+		:rtype: dict, string or None
+		:return: a JSON dict if the server replied with "application/json".
+		         Raw data otherwise. None, if the reply was empty.
+		"""
+
+		response = self.make_request(method, self._url(path), params=params, query_params=query_params)
+
+		data = response.read()
+		if response.getheader("Content-Type", "").startswith("application/json"):
+			data = json.loads(data)
+
+		if response.status != 200:
+			raise TiktalikAPIError(response.status, data)
+
+		return data
+
+	def list_instances(self, actions=False, vpsimage=False, cost=False):
+		"""
+		List all instances.
+
+		:type actions: boolean
+		:param actions: include recent actions in each Instance
+
+		:type vpsimage: boolean
+		:param vpsimage: include VPS Image details in each Instance
+
+		:type cost: boolean
+		:param cost: include cost per hour in each Instance
+
+		:rtype: list
+		:return: list of Instance objects
+		"""
+
+		response = self.request("GET", "/instance",
+				query_params={"actions": actions, "vpsimage": vpsimage, "cost": cost})
+
+		return [Instance(self, i) for i in response]
+
+	def list_networks(self):
+		"""
+		List all available networks.
+
+		:rtype: list
+		:return: list of Network objects
+		"""
+
+		response = self.request("GET", "/network")
+		return [Network(self, i) for i in response]
+
+	def list_images(self):
+		"""
+		List all available VPS Images.
+
+		:rtype: list
+		:return: list of VPSImage objects
+		"""
+
+		response = self.request("GET", "/image")
+		return [VPSImage(self, i) for i in response]
+
+	def list_instance_interfaces(self, uuid):
+		"""
+		List all interfaces attached to an Instance
+
+		:type uuid: string
+		:param uuid: Instance UUID
+
+		:rtype: list
+		:return: list of VPSNetInterface objects
+		"""
+
+		response = self.request("GET", "/instance/%s/interface" % uuid)
+		return [VPSNetInterface(self, i) for i in response]
+
+	def get_instance(self, uuid, actions=False, vpsimage=False, cost=False):
+		"""
+		Fetch an Instance object from the server
+
+		:type uuid: string
+		:param uuid: Instance UUID
+
+		:seealso: `list_instances`
+
+		:rtype: Instance
+		:return: an Instance object that represents the instance specified by UUID
+		"""
+
+		response = self.request("GET", "/instance/" + uuid,
+				query_params={"actions": actions, "vpsimage": vpsimage, "cost": cost})
+		return Instance(self, response)
+
+	def get_image(self, image_uuid):
+		"""
+		Fetch a VPSImage object from the server
+
+		:type image_uuid: string
+		:param image_uuid: VPSImage UUID
+
+		:rtype: VPSImage
+		:return: a VPSImage object that represents the image specified by UUID
+		"""
+
+		response = self.request("GET", "/image/" + image_uuid)
+		return VPSImage(self, response)
+
+	def create_instance(self, hostname, size, image_uuid, networks):
+		"""
+		Create a new instance.
+
+		A new instance will be created server-side, using the specified image,
+		attaching networks resolved by UUID. This call returns immediately,
+		the instance is created asynchronously.
+
+		:type hostname: string
+		:param hostname: hostname that will be used for the new instance
+
+		:type size: string
+		:param size: instance size; use 0.25, 0.5, 1 to 15, or "cpuhog"
+
+		:type image_uuid: string
+		:param image_uuid: UUID of a VPSImage to be installed
+
+		:type networks: list
+		:param networks: list of network UUIDs to be attached to the new instance
+		"""
+
+		params = dict(hostname=hostname, size=size, image_uuid=image_uuid)
+		params["networks[]"] = networks
+
+		self.request("POST", "/instance", params)
+
+	def delete_image(self, uuid):
+		"""
+		Delete a VPSImage specified by UUID.
+
+		:type uuid: string
+		:param uuid: UUID of the image to be deleted
+		"""
+
+		self.request("DELETE", "/image/%s" % uuid)
+
+	def add_network_interface(self, instance_uuid, network_uuid, seq):
+		"""
+		Attach a new network interface to an Instance. The Instance doesn't
+		have to be stopped to perform this action. This action is performed
+		asynchronously.
+
+		:type instance_uuid: string
+		:param instance_uuid: UUID of the Instance
+
+		:type network_uuid: string
+		:param network_uuid: UUID of the Network to be attached
+
+		:type seq: int
+		:param seq: sequential number of the interface that will obtain an
+		            address belonging to the Network. This will be reflected
+		            by the operating system's configuration, eg. "3" maps to "eth3"
+		"""
+
+		self.request("POST", "/instance/%s/interface" % instance_uuid,
+			dict(network_uuid=network_uuid, seq=seq))
+
