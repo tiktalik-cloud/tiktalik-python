@@ -131,7 +131,7 @@ class Instance(APIObject):
 		vpsimage_uuid: string,
 		state: int,
 		running: boolean
-		networks: List[VPSNetInterface]
+		interfaces: List[VPSNetInterface]
 		actions: List[Operation]
 		vpsimage: VPSImage,
 		default_password: string,
