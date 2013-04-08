@@ -16,9 +16,9 @@ The SDK features:
 
 ## Installation
 
-Installing the latest stable version using `pip`:
+Use pip to install the latest stable version:
 
-`pip install https://github.com/tiktalik-cloud/tiktalik-python/tarball/master`
+`$ pip install tiktalik`
 
 ## Requirements
 
