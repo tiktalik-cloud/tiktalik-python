@@ -25,6 +25,10 @@ Use pip to install the latest stable version:
  * Python 2.7
  * no additional modules are required.
 
+## Documentation
+
+See [http://www.tiktalik.com/api](http://www.tiktalik.com/api) for documentation and tutorials.
+
 ## License
 
 Copyright (c) 2013 Techstorage sp. z o.o.
