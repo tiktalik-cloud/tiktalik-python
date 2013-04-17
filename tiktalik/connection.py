@@ -19,7 +19,8 @@
 
 # -*- coding: utf8 -*-
 
-import time, httplib, hmac, base64, sha, urllib, md5
+import time, httplib, hmac, base64, sha, urllib, md5, json
+from .error import TiktalikAPIError
 
 class TiktalikAuthConnection(object):
 	"""
@@ -42,6 +43,56 @@ class TiktalikAuthConnection(object):
 
 		self.timeout = 5
 		self.conn = None
+
+	def _encode_param(self, value):
+		if isinstance(value, list):
+			return map(self._encode_param, value)
+		elif isinstance(value, basestring):
+			return value.encode("utf8")
+
+		return value
+
+
+	def request(self, method, path, params=None, query_params=None):
+		"""
+		Send a request over HTTP. The inheriting class must override self.base_url().
+
+		:type method: string
+		:param method: HTTP method to use (GET, POST etc.)
+
+		:type path: string
+		:param path: path to be requested from server
+
+		:type params: dict
+		:param params: a dictionary of parameters sent in request body
+
+		:type query_params: dict
+		:param query_params: a dictionary of parameters sent in request path
+
+		:rtype: dict, string or None
+		:return: a JSON dict if the server replied with "application/json".
+		         Raw data otherwise. None, if the reply was empty.
+		"""
+
+		response = self.make_request(method, self.base_url() + path, params=params, query_params=query_params)
+
+		data = response.read()
+		if response.getheader("Content-Type", "").startswith("application/json"):
+			data = json.loads(data)
+
+		if response.status != 200:
+			raise TiktalikAPIError(response.status, data)
+
+		return data
+
+	def base_url(self):
+		"""
+		:rtype: string
+		:return: base URL for API requests, eg. "/api/v1/computing". Must NOT include trailing slash.
+		"""
+
+		raise NotImplementedError()
+
 
 	def make_request(self, method, path, headers=None, body=None, params=None, query_params=None):
 		"""

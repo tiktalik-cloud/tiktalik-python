@@ -17,25 +17,25 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+from .http import *
+from ..connection import TiktalikAuthConnection
 
-class TiktalikAPIError(Exception):
-	"""
-	Raised when an API call fails, either due to network errors
-	or when an error is returned by the server.
+class HTTPBalancerConnection(TiktalikAuthConnection):
+	def base_url(self):
+		return "/api/v1/loadbalancer"
 
-	Attributes:
-		http_status: int - HTTP status code that triggered this error
-		description: string - error description returned by the server (might be None)
-	"""
+	def list_httpbalancers(self, history=False):
+		response = self.request("GET", "/http", query_params=dict(history=history))
+		return [HTTPBalancer(self, i) for i in response]
 
-	def __init__(self, http_status, data=None):
-		self.http_status = http_status
-		self.data = data
+	def get_httpbalancer(self, uuid):
+		response = self.request("GET", "/http/%s" % uuid)
+		return HTTPBalancer(self, response)
 
-		if isinstance(data, dict):
-			self.description = data.get("description", None)
-		else:
-			self.description = None
-
-	def __str__(self):
-		return "TiktalikAPIError: %s %s" % (self.http_status, self.description)
+	def create_httpbalancer(self, name, domains=None, backends=None):
+		"""
+		backends: list of (ip, port, weight)
+		"""
+		response = self.request("POST", "/http",
+			{ "name": name, "domains[]": domains, "backends[]": ["%s:%i:%i" % b for b in backends]})
+		return HTTPBalancer(self, response)

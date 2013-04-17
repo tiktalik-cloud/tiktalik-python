@@ -20,24 +20,7 @@
 # -*- coding: utf8 -*-
 
 from ..error import TiktalikAPIError
-
-class APIObject(object):
-	"""
-	Base class for all objects returned by the API.
-	"""
-
-	def __init__(self, conn, json_dict, defaults={}):
-		super(APIObject, self).__init__()
-
-		self.conn = conn
-
-		for key, value in json_dict.items():
-			setattr(self, key, value)
-
-		for key, value in defaults.iteritems():
-			if key not in json_dict:
-				setattr(self, key, value)
-
+from ..apiobject import APIObject
 
 class Network(APIObject):
 	"""

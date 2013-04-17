@@ -17,25 +17,23 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+# -*- coding: utf8 -*-
 
-class TiktalikAPIError(Exception):
+class APIObject(object):
 	"""
-	Raised when an API call fails, either due to network errors
-	or when an error is returned by the server.
-
-	Attributes:
-		http_status: int - HTTP status code that triggered this error
-		description: string - error description returned by the server (might be None)
+	Base class for all objects returned by the API.
 	"""
 
-	def __init__(self, http_status, data=None):
-		self.http_status = http_status
-		self.data = data
+	def __init__(self, conn, json_dict, defaults={}):
+		super(APIObject, self).__init__()
 
-		if isinstance(data, dict):
-			self.description = data.get("description", None)
-		else:
-			self.description = None
+		self.conn = conn
 
-	def __str__(self):
-		return "TiktalikAPIError: %s %s" % (self.http_status, self.description)
+		for key, value in json_dict.items():
+			setattr(self, key, value)
+
+		for key, value in defaults.iteritems():
+			if key not in json_dict:
+				setattr(self, key, value)
+
+

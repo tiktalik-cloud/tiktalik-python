@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
 	name="tiktalik",
-	version="1.0",
+	version="1.1",
 	description="Python SDK for the Tiktalik Computing service.",
 	author="Techstorage sp. z o.o",
 	author_email="kontakt@tiktalik.com",
@@ -14,5 +14,5 @@ setup(
 		"License :: OSI Approved :: MIT License",
 	],
 
-	packages=["tiktalik", "tiktalik.computing"],
+	packages=["tiktalik", "tiktalik.computing", "tiktalik.loadbalancer"],
 )

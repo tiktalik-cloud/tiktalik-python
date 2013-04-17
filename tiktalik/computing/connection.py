@@ -19,7 +19,7 @@
 
 import json
 
-from tiktalik.computing.objects import *
+from .objects import *
 from ..error import TiktalikAPIError
 from ..connection import TiktalikAuthConnection
 
@@ -28,40 +28,8 @@ class ComputingConnection(TiktalikAuthConnection):
 	Performs API calls. All method raise TiktalikAPIError on errors.
 	"""
 
-	def _url(self, path):
-		return "/api/v1/computing" + path
-
-	def request(self, method, path, params=None, query_params=None):
-		"""
-		Send a request over HTTP.
-
-		:type method: string
-		:param method: HTTP method to use (GET, POST etc.)
-
-		:type path: string
-		:param path: path to be requested from server
-
-		:type params: dict
-		:param params: a dictionary of parameters sent in request body
-
-		:type query_params: dict
-		:param query_params: a dictionary of parameters sent in request path
-
-		:rtype: dict, string or None
-		:return: a JSON dict if the server replied with "application/json".
-		         Raw data otherwise. None, if the reply was empty.
-		"""
-
-		response = self.make_request(method, self._url(path), params=params, query_params=query_params)
-
-		data = response.read()
-		if response.getheader("Content-Type", "").startswith("application/json"):
-			data = json.loads(data)
-
-		if response.status != 200:
-			raise TiktalikAPIError(response.status, data)
-
-		return data
+	def base_url(self):
+		return "/api/v1/computing"
 
 	def list_instances(self, actions=False, vpsimage=False, cost=False):
 		"""
