@@ -164,7 +164,7 @@ class ComputingConnection(TiktalikAuthConnection):
 		:param hostname: hostname that will be used for the new instance
 
 		:type size: string
-		:param size: instance size; use 0.25, 0.5, 1 to 15, or "cpuhog"
+		:param size: instance size; use 0.25, 0.5, 1 to 15, or one of: "cpuhog", "cpuhog4"
 
 		:type image_uuid: string
 		:param image_uuid: UUID of a VPSImage to be installed
