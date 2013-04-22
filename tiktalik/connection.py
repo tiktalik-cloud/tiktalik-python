@@ -111,6 +111,8 @@ class TiktalikAuthConnection(object):
 			body = urllib.urlencode(params, True)
 			headers["content-type"] = "application/x-www-form-urlencoded"
 
+		path = urllib.quote(path.encode("utf8"))
+
 		if query_params:
 			qp = {}
 			for key, value in query_params.iteritems():
