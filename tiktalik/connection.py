@@ -108,6 +108,7 @@ class TiktalikAuthConnection(object):
 		headers = headers or {}
 
 		if params:
+			params = dict((k.encode("utf8"), self._encode_param(v)) for (k, v) in params.iteritems())
 			body = urllib.urlencode(params, True)
 			headers["content-type"] = "application/x-www-form-urlencoded"
 
@@ -120,7 +121,7 @@ class TiktalikAuthConnection(object):
 					qp[key] = "true" if value else "false"
 				else:
 					#assert isinstance(value, (str, int))
-					qp[key] = value
+					qp[key.encode("utf8")] = self._encode_param(value)
 
 			qp = urllib.urlencode(qp, True)
 			path = "%s?%s" % (path, qp)
