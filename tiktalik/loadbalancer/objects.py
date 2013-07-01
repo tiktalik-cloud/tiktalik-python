@@ -22,58 +22,58 @@
 from ..error import TiktalikAPIError
 from ..apiobject import APIObject
 
-__all__ = ["HTTPBalancer", "HTTPBalancerBackend", "HTTPBalancerAction"]
+__all__ = ["LoadBalancer", "LoadBalancerBackend", "LoadBalancerAction"]
 
-class HTTPBalancer(APIObject):
-	"""A HTTPBalancer instance. Contains a list of domains and backends,
+class LoadBalancer(APIObject):
+	"""A LoadBalancer instance. Contains a list of domains and backends,
 	and optionally a history of operations performed on this instance.
 
-	Gives access to all API calls that operate on the Tiktalik HTTPBalancer service.
+	Gives access to all API calls that operate on the Tiktalik LoadBalancer service.
 	"""
 
 	def __init__(self, conn, json_dict):
-		super(HTTPBalancer, self).__init__(conn, json_dict)
+		super(LoadBalancer, self).__init__(conn, json_dict)
 
-		self.backends = [HTTPBalancerBackend(conn, i) for i in self.backends]
-		self.history = [HTTPBalancerAction(conn, i) for i in self.history] if self.history else []
+		self.backends = [LoadBalancerBackend(conn, i) for i in self.backends]
+		self.history = [LoadBalancerAction(conn, i) for i in self.history] if self.history else []
 
 	def __str__(self):
-		return "<HTTPBalancer:(%s) %s" % (self.uuid, self.name)
+		return "<LoadBalancer:(%s) %s" % (self.uuid, self.name)
 
 	@classmethod
 	def list_all(cls, conn, history=False):
 		"""
-		:seealso: ComputingConnection.list_httpbalancers()
+		:seealso: ComputingConnection.list_loadbalancers()
 		"""
 
-		return conn.list_httpbalancers(history=history)
+		return conn.list_loadbalancers(history=history)
 
 	@classmethod
 	def create(cls, conn, name, domains=None, backends=None):
 		"""
-		:seealso: ComputingConnection.create_httpbalancer()
+		:seealso: ComputingConnection.create_loadbalancer()
 		"""
 
-		return conn.create_httpbalancer(name, domains, backends)
+		return conn.create_loadbalancer(name, domains, backends)
 
 	@classmethod
 	def get(cls, conn, uuid):
 		"""
-		:seealso: ComputingConnection.get_httpbalancer()
+		:seealso: ComputingConnection.get_loadbalancer()
 		"""
 
-		return conn.get_httpbalancer(uuid)
+		return conn.get_loadbalancer(uuid)
 
 	def enable(self):
 		"""
-		Enable this HTTPBalancer.
+		Enable this LoadBalancer.
 		"""
 
 		return self.conn.request("POST", "/http/%s/enable" % self.uuid)
 
 	def disable(self):
 		"""
-		Disable this HTTPBalancer. Its configuration is left intact, this
+		Disable this LoadBalancer. Its configuration is left intact, this
 		operation only stops serving user requests.
 		"""
 
@@ -81,7 +81,7 @@ class HTTPBalancer(APIObject):
 
 	def rename(self, name):
 		"""
-		Rename the HTTPBalancer.
+		Rename the LoadBalancer.
 
 		:type name: string
 		:param name: new name
@@ -128,9 +128,9 @@ class HTTPBalancer(APIObject):
 		return self.conn.request("PUT", "/http/%s/backend/%s" % (self.uuid, backend_uuid), params)
 
 
-class HTTPBalancerBackend(APIObject):
+class LoadBalancerBackend(APIObject):
 	pass
 
 
-class HTTPBalancerAction(APIObject):
+class LoadBalancerAction(APIObject):
 	pass
