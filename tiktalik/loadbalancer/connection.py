@@ -32,7 +32,7 @@ class LoadBalancerConnection(TiktalikAuthConnection):
 		response = self.request("GET", "/%s" % uuid)
 		return LoadBalancer(self, response)
 
-	def create_loadbalancer(self, name, proto, entry_point=None, listen_port=None, backends=None, domains=None):
+	def create_loadbalancer(self, name, proto, address=None, port=None, backends=None, domains=None):
 		"""
 		Create new load balancer instance
 
@@ -42,11 +42,11 @@ class LoadBalancerConnection(TiktalikAuthConnection):
 		:type proto: string
 		:param proto: load balancing protocol, one of 'TCP', 'HTTP' or 'HTTPS'
 
-		:type entry_point: string
-		:param entry_point: optional entry point to use, as its UID or cname, if None then new entry point will be created
+		:type address: string
+		:param address: optional entry point to use, if None then new entry point will be created
 
-		:type listen_port: int
-		:param listen_port: listen port, only for TCP proto balancing
+		:type port: int
+		:param port: listen port, only for TCP proto balancing
 
 		:type backends: list
 		:param backends: list of (ip, port, weight) tuples
@@ -54,6 +54,18 @@ class LoadBalancerConnection(TiktalikAuthConnection):
 		:type domains: list
 		:param domains: list of domains, only for HTTP proto balancing
 		"""
-		response = self.request("POST", "/",
-			{ "name": name, "domains[]": domains, "backends[]": ["%s:%i:%i" % b for b in backends]})
+
+		params = {
+				"name": name,
+				"type": proto,
+				"backends[]": ["%s:%i:%i" % b for b in backends],
+				}
+		if address:
+			params["address"] = address
+		if port:
+			params["port"] = port
+		if domains:
+			params["domains[]"] = domains
+
+		response = self.request("POST", "", params)
 		return LoadBalancer(self, response)

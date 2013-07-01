@@ -69,7 +69,7 @@ class LoadBalancer(APIObject):
 		Enable this LoadBalancer.
 		"""
 
-		return self.conn.request("POST", "/http/%s/enable" % self.uuid)
+		return self.conn.request("POST", "/%s/enable" % self.uuid)
 
 	def disable(self):
 		"""
@@ -77,7 +77,7 @@ class LoadBalancer(APIObject):
 		operation only stops serving user requests.
 		"""
 
-		return self.conn.request("POST", "/http/%s/disable" % self.uuid)
+		return self.conn.request("POST", "/%s/disable" % self.uuid)
 
 	def rename(self, name):
 		"""
@@ -87,37 +87,37 @@ class LoadBalancer(APIObject):
 		:param name: new name
 		"""
 
-		return self.conn.request("PUT", "/http/%s/name" % self.uuid,
+		return self.conn.request("PUT", "/%s/name" % self.uuid,
 			{"name": name})
 
 	def delete(self):
-		return self.conn.request("DELETE", "/http/%s" % self.uuid)
+		return self.conn.request("DELETE", "/%s" % self.uuid)
 
 	def set_domains(self, domains):
-		return self.conn.request("POST", "/http/%s/domain" % self.uuid,
+		return self.conn.request("POST", "/%s/domain" % self.uuid,
 			{"domains[]": domains})
 	
 	def add_domain(self, domain):
-		return self.conn.request("PUT", "/http/%s/domain" % self.uuid,
+		return self.conn.request("PUT", "/%s/domain" % self.uuid,
 			{"domain": domain})
 
 	def remove_domain(self, domain):
-		return self.conn.request("DELETE", "/http/%s/domain/%s" % (self.uuid, domain))
+		return self.conn.request("DELETE", "/%s/domain/%s" % (self.uuid, domain))
 
 	def set_backends(self, backends):
 		"""
 		backends: list of (ip, port, weight)
 		"""
 
-		return self.conn.request("POST", "/http/%s/backend" % self.uuid,
+		return self.conn.request("POST", "/%s/backend" % self.uuid,
 			{"backends[]": ["%s:%i:%i" % b for b in backends]})
 
 	def add_backend(self, ip, port, weight):
-		return self.conn.request("PUT", "/http/%s/backend" % self.uuid,
+		return self.conn.request("PUT", "/%s/backend" % self.uuid,
 			{"backend": "%s:%i:%i" % (ip, port, weight)})
 
 	def remove_backend(self, backend_uuid):
-		return self.conn.request("DELETE", "/http/%s/backend/%s" % (self.uuid, backend_uuid))
+		return self.conn.request("DELETE", "/%s/backend/%s" % (self.uuid, backend_uuid))
 
 	def modify_backend(self, backend_uuid, ip=None, port=None, weight=None):
 		params = {}
@@ -125,7 +125,7 @@ class LoadBalancer(APIObject):
 		if port is not None: params["port"] = port
 		if weight is not None: params["weight"] = weight
 
-		return self.conn.request("PUT", "/http/%s/backend/%s" % (self.uuid, backend_uuid), params)
+		return self.conn.request("PUT", "/%s/backend/%s" % (self.uuid, backend_uuid), params)
 
 
 class LoadBalancerBackend(APIObject):
