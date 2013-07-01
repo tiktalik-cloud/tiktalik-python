@@ -19,7 +19,7 @@
 
 # -*- coding: utf8 -*-
 
-import time, httplib, hmac, base64, sha, urllib, md5, json
+import time, httplib, hmac, base64, sha, urllib, md5, json, string
 from .error import TiktalikAPIError
 
 class TiktalikAuthConnection(object):
@@ -33,6 +33,16 @@ class TiktalikAuthConnection(object):
 		self.api_secret_key = api_secret_key
 		self.host = host
 		self.port = port
+
+		# backward compability: secret_key is known as a base64 string, but it's used
+		# internally as a binary decoded string. A long time ago this function as input
+		# needed secret key decoded to binary string, so now try to handle both input
+		# forms: deprecated decoded one and "normal" encoded as base64.
+		try:
+			if len(self.api_secret_key.lstrip(string.letters + string.digits + '+/=')) == 0:
+				self.api_secret_key = base64.standard_b64decode(self.api_secret_key)
+		except TypeError:
+			pass
 
 		if use_ssl:
 			self.conn_cls = httplib.HTTPSConnection
