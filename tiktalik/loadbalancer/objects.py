@@ -38,7 +38,7 @@ class LoadBalancer(APIObject):
 		self.history = [LoadBalancerAction(conn, i) for i in self.history] if self.history else []
 
 	def __str__(self):
-		return "<LoadBalancer:(%s) %s" % (self.uuid, self.name)
+		return "<LoadBalancer:(%s) %s>" % (self.uuid, self.name)
 
 	@classmethod
 	def list_all(cls, conn, history=False):
