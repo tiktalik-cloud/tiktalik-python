@@ -50,12 +50,12 @@ class LoadBalancer(APIObject):
 		return conn.list_loadbalancers(history=history)
 
 	@classmethod
-	def create(cls, conn, name, domains=None, backends=None):
+	def create(cls, conn, *args, **kwargs):
 		"""
 		:seealso: ComputingConnection.create_loadbalancer()
 		"""
 
-		return conn.create_loadbalancer(name, domains, backends)
+		return conn.create_loadbalancer(*args, **kwargs)
 
 	@classmethod
 	def get(cls, conn, uuid):
