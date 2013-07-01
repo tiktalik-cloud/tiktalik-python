@@ -35,6 +35,7 @@ class LoadBalancer(APIObject):
 		super(LoadBalancer, self).__init__(conn, json_dict)
 
 		self.backends = [LoadBalancerBackend(conn, i) for i in self.backends]
+		self.monitor = LoadBalancerBackendMonitor(conn, self.monitor)
 		self.history = [LoadBalancerAction(conn, i) for i in self.history] if self.history else []
 
 	def __str__(self):
@@ -133,4 +134,7 @@ class LoadBalancerBackend(APIObject):
 
 
 class LoadBalancerAction(APIObject):
+	pass
+
+class LoadBalancerBackendMonitor(APIObject):
 	pass
