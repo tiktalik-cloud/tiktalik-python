@@ -17,25 +17,55 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-from .http import *
+from .objects import *
 from ..connection import TiktalikAuthConnection
 
-class HTTPBalancerConnection(TiktalikAuthConnection):
+class LoadBalancerConnection(TiktalikAuthConnection):
 	def base_url(self):
 		return "/api/v1/loadbalancer"
 
-	def list_httpbalancers(self, history=False):
-		response = self.request("GET", "/http", query_params=dict(history=history))
-		return [HTTPBalancer(self, i) for i in response]
+	def list_loadbalancers(self, history=False):
+		response = self.request("GET", "", query_params=dict(history=history))
+		return [LoadBalancer(self, i) for i in response]
 
-	def get_httpbalancer(self, uuid):
-		response = self.request("GET", "/http/%s" % uuid)
-		return HTTPBalancer(self, response)
+	def get_loadbalancer(self, uuid):
+		response = self.request("GET", "/%s" % uuid)
+		return LoadBalancer(self, response)
 
-	def create_httpbalancer(self, name, domains=None, backends=None):
+	def create_loadbalancer(self, name, proto, address=None, port=None, backends=None, domains=None):
 		"""
-		backends: list of (ip, port, weight)
+		Create new load balancer instance
+
+		:type name: string
+		:param name:
+
+		:type proto: string
+		:param proto: load balancing protocol, one of 'TCP', 'HTTP' or 'HTTPS'
+
+		:type address: string
+		:param address: optional entry point to use, if None then new entry point will be created
+
+		:type port: int
+		:param port: listen port, only for TCP proto balancing
+
+		:type backends: list
+		:param backends: list of (ip, port, weight) tuples
+
+		:type domains: list
+		:param domains: list of domains, only for HTTP proto balancing
 		"""
-		response = self.request("POST", "/http",
-			{ "name": name, "domains[]": domains, "backends[]": ["%s:%i:%i" % b for b in backends]})
-		return HTTPBalancer(self, response)
+
+		params = {
+				"name": name,
+				"type": proto,
+				"backends[]": ["%s:%i:%i" % b for b in backends],
+				}
+		if address:
+			params["address"] = address
+		if port:
+			params["port"] = port
+		if domains:
+			params["domains[]"] = domains
+
+		response = self.request("POST", "", params)
+		return LoadBalancer(self, response)
