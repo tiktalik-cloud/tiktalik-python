@@ -120,7 +120,7 @@ class ComputingConnection(TiktalikAuthConnection):
 		response = self.request("GET", "/image/" + image_uuid)
 		return VPSImage(self, response)
 
-	def create_instance(self, hostname, size, image_uuid, networks):
+	def create_instance(self, hostname, size, image_uuid, networks, ssh_key = None):
 		"""
 		Create a new instance.
 
@@ -144,7 +144,10 @@ class ComputingConnection(TiktalikAuthConnection):
 		params = dict(hostname=hostname, size=size, image_uuid=image_uuid)
 		params["networks[]"] = networks
 
-		self.request("POST", "/instance", params)
+		if ssh_key and ssh_key != '':
+			params["ssh_key"] = ssh_key
+
+		return self.request("POST", "/instance", params)
 
 	def delete_image(self, uuid):
 		"""
