@@ -149,6 +149,16 @@ class ComputingConnection(TiktalikAuthConnection):
 
 		return self.request("POST", "/instance", params)
 
+	def delete_instance(self, uuid):
+		"""
+		Delete Tiktalik Instance specified by UUID.
+
+		:type uuid: string
+		:param uuid: UUID of the instance to be deleted
+		"""
+		self.request("DELETE", "/instance/%s" % uuid)
+
+
 	def delete_image(self, uuid):
 		"""
 		Delete a VPSImage specified by UUID.
