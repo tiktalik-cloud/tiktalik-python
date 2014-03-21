@@ -120,7 +120,7 @@ class ComputingConnection(TiktalikAuthConnection):
 		response = self.request("GET", "/image/" + image_uuid)
 		return VPSImage(self, response)
 
-	def create_instance(self, hostname, size, image_uuid, networks, ssh_key = None):
+	def create_instance(self, hostname, size, image_uuid, networks, ssh_key = None, disk_size_mb = None):
 		"""
 		Create a new instance.
 
@@ -132,13 +132,18 @@ class ComputingConnection(TiktalikAuthConnection):
 		:param hostname: hostname that will be used for the new instance
 
 		:type size: string
-		:param size: instance size; use 0.25, 0.5, 1 to 15, or one of: "cpuhog", "cpuhog4"
+		:param size: instance size (or type); use 0.25, 0.5, 1 to 15 for PRO instances,
+		             or one of "cpuhog", "cpuhog4" for PRO-cpuhog instances,
+		             or one of "1s", "2s", "4s" for standard instances.
 
 		:type image_uuid: string
 		:param image_uuid: UUID of a VPSImage to be installed
 
 		:type networks: list
 		:param networks: list of network UUIDs to be attached to the new instance
+
+		:type disk_size_mb: int
+		:param disk_size_mb: for standard instances must set disk size in MB
 		"""
 
 		params = dict(hostname=hostname, size=size, image_uuid=image_uuid)
@@ -146,6 +151,9 @@ class ComputingConnection(TiktalikAuthConnection):
 
 		if ssh_key and ssh_key != '':
 			params["ssh_key"] = ssh_key
+
+		if disk_size_mb and isinstance(disk_size_mb, int):
+			params["disk_size_mb"] = disk_size_mb
 
 		return self.request("POST", "/instance", params)
 
