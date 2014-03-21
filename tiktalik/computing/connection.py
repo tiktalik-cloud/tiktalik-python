@@ -106,6 +106,18 @@ class ComputingConnection(TiktalikAuthConnection):
 				query_params={"actions": actions, "vpsimage": vpsimage, "cost": cost})
 		return Instance(self, response)
 
+	def get_instance_block_devices(self, uuid):
+		""" Fetch an Instances block devices from the server
+
+		:type uuid: string
+		:param uuid: Instance UUID
+
+		:rtype: List[BlockDevice]
+		"""
+
+		response = self.request("GET", "/instance/" + uuid + "/blockdevice")
+		return [BlockDevice(self, b) for b in response]
+
 	def get_image(self, image_uuid):
 		"""
 		Fetch a VPSImage object from the server

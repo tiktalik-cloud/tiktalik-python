@@ -119,6 +119,13 @@ class Operation(APIObject):
 	def __str__(self):
 		return "<Operation:(%s) start=%s, end=%s, %s>" % (self.uuid, self.start_time, self.end_time, self.description)
 
+class BlockDevice(APIObject):
+	""" Represents an Instance's attached block device.
+	"""
+
+	def __str__(self):
+		return "<BlockDevice:(%s) size=%iGB, seq=%d>" % (self.uuid, self.size, self.seq)
+
 class Instance(APIObject):
 	"""
 	Represents a user's Instance. This object is used to perform mission-critical
@@ -137,11 +144,12 @@ class Instance(APIObject):
 		actions: List[Operation]
 		vpsimage: VPSImage,
 		default_password: string,
-		service_name: string
-		gross_cost_per_hour: float
+		service_name: string,
+		gross_cost_per_hour: float,
+		block_devices: List[BlockDevice]  -- must be loaded by call .load_block_devices()
 	"""
 	def __init__(self, conn, json_dict):
-		defaults = {"actions":[], "vpsimage":None, "gross_cost_per_hour":None}
+		defaults = {"actions":[], "vpsimage":None, "gross_cost_per_hour":None, "block_devices":None}
 
 		super(Instance, self).__init__(conn, json_dict, defaults)
 
@@ -234,6 +242,14 @@ class Instance(APIObject):
 		:seealso: ComputingConnection.remove_network_interface()
 		"""
 		raise NotImplementedError()
+
+	def load_block_devices(self):
+		"""
+		(Re)load list of attached block devices
+		"""
+
+		self.block_devices = self.conn.get_instance_block_devices(self.uuid)
+		return self.block_devices
 
 	def __str__(self):
 		return "<Instance(%s): %s, state=%s, running=%s>" % (self.uuid, self.hostname, self.state, self.running)
