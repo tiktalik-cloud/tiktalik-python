@@ -124,7 +124,7 @@ class BlockDevice(APIObject):
 	"""
 
 	def __str__(self):
-		return "<BlockDevice:(%s) size=%iGB, seq=%d>" % (self.uuid, self.size, self.seq)
+		return "<BlockDevice:(%s) size=%iMB, seq=%d>" % (self.uuid, self.size, self.seq)
 
 class Instance(APIObject):
 	"""
