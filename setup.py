@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
 	name="tiktalik",
-	version="1.4",
+	version="1.4.2",
 	description="Python SDK for the Tiktalik Computing service.",
 	author="Techstorage sp. z o.o",
 	author_email="kontakt@tiktalik.com",
