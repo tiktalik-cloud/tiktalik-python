@@ -132,7 +132,7 @@ class ComputingConnection(TiktalikAuthConnection):
 		response = self.request("GET", "/image/" + image_uuid)
 		return VPSImage(self, response)
 
-	def create_instance(self, hostname, size, image_uuid, networks, ssh_key = None, disk_size_mb = None):
+	def create_instance(self, hostname, size, image_uuid, networks, ssh_key = None, disk_size_gb = None):
 		"""
 		Create a new instance.
 
@@ -154,8 +154,8 @@ class ComputingConnection(TiktalikAuthConnection):
 		:type networks: list
 		:param networks: list of network UUIDs to be attached to the new instance
 
-		:type disk_size_mb: int
-		:param disk_size_mb: for standard instances must set disk size in MB
+		:type disk_size_gb: int
+		:param disk_size_gb: for standard instances must set disk size in GB
 		"""
 
 		params = dict(hostname=hostname, size=size, image_uuid=image_uuid)
@@ -164,8 +164,8 @@ class ComputingConnection(TiktalikAuthConnection):
 		if ssh_key and ssh_key != '':
 			params["ssh_key"] = ssh_key
 
-		if disk_size_mb and isinstance(disk_size_mb, int):
-			params["disk_size_mb"] = disk_size_mb
+		if disk_size_gb and isinstance(disk_size_gb, int):
+			params["disk_size_gb"] = disk_size_gb
 
 		return self.request("POST", "/instance", params)
 
