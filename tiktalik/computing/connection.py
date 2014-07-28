@@ -210,3 +210,15 @@ class ComputingConnection(TiktalikAuthConnection):
 		self.request("POST", "/instance/%s/interface" % instance_uuid,
 			dict(network_uuid=network_uuid, seq=seq))
 
+	def remove_network_interface(self, instance_uuid, interface_uuid):
+		"""
+		Detach a network interface from an Instance.
+
+		:type instance_uuid: string
+		:param instance_uuid: UUID of the Instance
+
+		:type interface_uuid: string
+		:param interface_uuid: UUID of the Interface to be removed
+		"""
+
+		self.request("DELETE", "/instance/%s/interface/%s" % (instance_uuid, interface_uuid))

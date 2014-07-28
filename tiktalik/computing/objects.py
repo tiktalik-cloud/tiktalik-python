@@ -237,11 +237,12 @@ class Instance(APIObject):
 
 		self.conn.add_network_interface(self.uuid, network_uuid, seq)
 
-	def remove_interface(self, seq):
+	def remove_interface(self, interface_uuid):
 		"""
 		:seealso: ComputingConnection.remove_network_interface()
 		"""
-		raise NotImplementedError()
+		
+		self.conn.remove_network_interface(self.uuid, interface_uuid)
 
 	def load_block_devices(self):
 		"""
