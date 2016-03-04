@@ -27,7 +27,7 @@ class TiktalikAuthConnection(object):
 	Simple wrapper for HTTPConnection. Adds authentication information to requests.
 	"""
 
-	def __init__(self, api_key, api_secret_key, host="www.tiktalik.com", port=443,
+	def __init__(self, api_key, api_secret_key, host="tiktalik.com", port=443,
 			use_ssl=True):
 		self.api_key = api_key
 		self.api_secret_key = api_secret_key
