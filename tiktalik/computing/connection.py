@@ -64,6 +64,28 @@ class ComputingConnection(TiktalikAuthConnection):
 		response = self.request("GET", "/network")
 		return [Network(self, i) for i in response]
 
+        def create_network(self, name):
+		"""
+		Create a new network.
+
+		A new instance will be created server-side, using the specified image,
+		attaching networks resolved by UUID. This call returns immediately,
+		the instance is created asynchronously.
+
+		:type name: string
+		:param name: Network name - as part of local domain. Max 15
+		             characters length (will be truncated), allowed
+		             characters are lower letters and digits. Must not
+		             starts with a digit.
+
+		:rtype: Network
+		:return: Network object
+		"""
+
+		params = dict(name=name)
+		response = self.request("POST", "/network", params)
+		return Network(self, response)
+
 	def list_images(self):
 		"""
 		List all available VPS Images.
