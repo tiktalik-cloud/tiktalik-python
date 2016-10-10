@@ -217,7 +217,6 @@ class Instance(APIObject):
         """
         Start a backup operation. The instance must be stopped.
         """
-        print self
         self.conn.request("POST", "/instance/%s/backup" % self.uuid, params={'backup_name': backup_name})
 
     def list_interfaces(self):
