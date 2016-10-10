@@ -21,51 +21,51 @@ from .objects import *
 from ..connection import TiktalikAuthConnection
 
 class LoadBalancerConnection(TiktalikAuthConnection):
-	def base_url(self):
-		return "/api/v1/loadbalancer"
+    def base_url(self):
+        return "/api/v1/loadbalancer"
 
-	def list_loadbalancers(self, history=False):
-		response = self.request("GET", "", query_params=dict(history=history))
-		return [LoadBalancer(self, i) for i in response]
+    def list_loadbalancers(self, history=False):
+        response = self.request("GET", "", query_params=dict(history=history))
+        return [LoadBalancer(self, i) for i in response]
 
-	def get_loadbalancer(self, uuid):
-		response = self.request("GET", "/%s" % uuid)
-		return LoadBalancer(self, response)
+    def get_loadbalancer(self, uuid):
+        response = self.request("GET", "/%s" % uuid)
+        return LoadBalancer(self, response)
 
-	def create_loadbalancer(self, name, proto, address=None, port=None, backends=None, domains=None):
-		"""
-		Create new load balancer instance
+    def create_loadbalancer(self, name, proto, address=None, port=None, backends=None, domains=None):
+        """
+        Create new load balancer instance
 
-		:type name: string
-		:param name:
+        :type name: string
+        :param name:
 
-		:type proto: string
-		:param proto: load balancing protocol, one of 'TCP', 'HTTP' or 'HTTPS'
+        :type proto: string
+        :param proto: load balancing protocol, one of 'TCP', 'HTTP' or 'HTTPS'
 
-		:type address: string
-		:param address: optional entry point to use, if None then new entry point will be created
+        :type address: string
+        :param address: optional entry point to use, if None then new entry point will be created
 
-		:type port: int
-		:param port: listen port, only for TCP proto balancing
+        :type port: int
+        :param port: listen port, only for TCP proto balancing
 
-		:type backends: list
-		:param backends: list of (ip, port, weight) tuples
+        :type backends: list
+        :param backends: list of (ip, port, weight) tuples
 
-		:type domains: list
-		:param domains: list of domains, only for HTTP proto balancing
-		"""
+        :type domains: list
+        :param domains: list of domains, only for HTTP proto balancing
+        """
 
-		params = {
-				"name": name,
-				"type": proto,
-				"backends[]": ["%s:%i:%i" % b for b in backends],
-				}
-		if address:
-			params["address"] = address
-		if port:
-			params["port"] = port
-		if domains:
-			params["domains[]"] = domains
+        params = {
+                "name": name,
+                "type": proto,
+                "backends[]": ["%s:%i:%i" % b for b in backends],
+                }
+        if address:
+            params["address"] = address
+        if port:
+            params["port"] = port
+        if domains:
+            params["domains[]"] = domains
 
-		response = self.request("POST", "", params)
-		return LoadBalancer(self, response)
+        response = self.request("POST", "", params)
+        return LoadBalancer(self, response)

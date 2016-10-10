@@ -25,116 +25,116 @@ from ..apiobject import APIObject
 __all__ = ["LoadBalancer", "LoadBalancerBackend", "LoadBalancerAction"]
 
 class LoadBalancer(APIObject):
-	"""A LoadBalancer instance. Contains a list of domains and backends,
-	and optionally a history of operations performed on this instance.
+    """A LoadBalancer instance. Contains a list of domains and backends,
+    and optionally a history of operations performed on this instance.
 
-	Gives access to all API calls that operate on the Tiktalik LoadBalancer service.
-	"""
+    Gives access to all API calls that operate on the Tiktalik LoadBalancer service.
+    """
 
-	def __init__(self, conn, json_dict):
-		super(LoadBalancer, self).__init__(conn, json_dict)
+    def __init__(self, conn, json_dict):
+        super(LoadBalancer, self).__init__(conn, json_dict)
 
-		self.backends = [LoadBalancerBackend(conn, i) for i in self.backends]
-		self.monitor = LoadBalancerBackendMonitor(conn, self.monitor)
-		self.history = [LoadBalancerAction(conn, i) for i in self.history] if self.history else []
+        self.backends = [LoadBalancerBackend(conn, i) for i in self.backends]
+        self.monitor = LoadBalancerBackendMonitor(conn, self.monitor)
+        self.history = [LoadBalancerAction(conn, i) for i in self.history] if self.history else []
 
-	def __str__(self):
-		return "<LoadBalancer:(%s) %s>" % (self.uuid, self.name)
+    def __str__(self):
+        return "<LoadBalancer:(%s) %s>" % (self.uuid, self.name)
 
-	@classmethod
-	def list_all(cls, conn, history=False):
-		"""
-		:seealso: ComputingConnection.list_loadbalancers()
-		"""
+    @classmethod
+    def list_all(cls, conn, history=False):
+        """
+        :seealso: ComputingConnection.list_loadbalancers()
+        """
 
-		return conn.list_loadbalancers(history=history)
+        return conn.list_loadbalancers(history=history)
 
-	@classmethod
-	def create(cls, conn, *args, **kwargs):
-		"""
-		:seealso: ComputingConnection.create_loadbalancer()
-		"""
+    @classmethod
+    def create(cls, conn, *args, **kwargs):
+        """
+        :seealso: ComputingConnection.create_loadbalancer()
+        """
 
-		return conn.create_loadbalancer(*args, **kwargs)
+        return conn.create_loadbalancer(*args, **kwargs)
 
-	@classmethod
-	def get(cls, conn, uuid):
-		"""
-		:seealso: ComputingConnection.get_loadbalancer()
-		"""
+    @classmethod
+    def get(cls, conn, uuid):
+        """
+        :seealso: ComputingConnection.get_loadbalancer()
+        """
 
-		return conn.get_loadbalancer(uuid)
+        return conn.get_loadbalancer(uuid)
 
-	def enable(self):
-		"""
-		Enable this LoadBalancer.
-		"""
+    def enable(self):
+        """
+        Enable this LoadBalancer.
+        """
 
-		return self.conn.request("POST", "/%s/enable" % self.uuid)
+        return self.conn.request("POST", "/%s/enable" % self.uuid)
 
-	def disable(self):
-		"""
-		Disable this LoadBalancer. Its configuration is left intact, this
-		operation only stops serving user requests.
-		"""
+    def disable(self):
+        """
+        Disable this LoadBalancer. Its configuration is left intact, this
+        operation only stops serving user requests.
+        """
 
-		return self.conn.request("POST", "/%s/disable" % self.uuid)
+        return self.conn.request("POST", "/%s/disable" % self.uuid)
 
-	def rename(self, name):
-		"""
-		Rename the LoadBalancer.
+    def rename(self, name):
+        """
+        Rename the LoadBalancer.
 
-		:type name: string
-		:param name: new name
-		"""
+        :type name: string
+        :param name: new name
+        """
 
-		return self.conn.request("PUT", "/%s/name" % self.uuid,
-			{"name": name})
+        return self.conn.request("PUT", "/%s/name" % self.uuid,
+            {"name": name})
 
-	def delete(self):
-		return self.conn.request("DELETE", "/%s" % self.uuid)
+    def delete(self):
+        return self.conn.request("DELETE", "/%s" % self.uuid)
 
-	def set_domains(self, domains):
-		return self.conn.request("POST", "/%s/domain" % self.uuid,
-			{"domains[]": domains})
-	
-	def add_domain(self, domain):
-		return self.conn.request("PUT", "/%s/domain" % self.uuid,
-			{"domain": domain})
+    def set_domains(self, domains):
+        return self.conn.request("POST", "/%s/domain" % self.uuid,
+            {"domains[]": domains})
+    
+    def add_domain(self, domain):
+        return self.conn.request("PUT", "/%s/domain" % self.uuid,
+            {"domain": domain})
 
-	def remove_domain(self, domain):
-		return self.conn.request("DELETE", "/%s/domain/%s" % (self.uuid, domain))
+    def remove_domain(self, domain):
+        return self.conn.request("DELETE", "/%s/domain/%s" % (self.uuid, domain))
 
-	def set_backends(self, backends):
-		"""
-		backends: list of (ip, port, weight)
-		"""
+    def set_backends(self, backends):
+        """
+        backends: list of (ip, port, weight)
+        """
 
-		return self.conn.request("POST", "/%s/backend" % self.uuid,
-			{"backends[]": ["%s:%i:%i" % b for b in backends]})
+        return self.conn.request("POST", "/%s/backend" % self.uuid,
+            {"backends[]": ["%s:%i:%i" % b for b in backends]})
 
-	def add_backend(self, ip, port, weight):
-		return self.conn.request("PUT", "/%s/backend" % self.uuid,
-			{"backend": "%s:%i:%i" % (ip, port, weight)})
+    def add_backend(self, ip, port, weight):
+        return self.conn.request("PUT", "/%s/backend" % self.uuid,
+            {"backend": "%s:%i:%i" % (ip, port, weight)})
 
-	def remove_backend(self, backend_uuid):
-		return self.conn.request("DELETE", "/%s/backend/%s" % (self.uuid, backend_uuid))
+    def remove_backend(self, backend_uuid):
+        return self.conn.request("DELETE", "/%s/backend/%s" % (self.uuid, backend_uuid))
 
-	def modify_backend(self, backend_uuid, ip=None, port=None, weight=None):
-		params = {}
-		if ip is not None: params["ip"] = ip
-		if port is not None: params["port"] = port
-		if weight is not None: params["weight"] = weight
+    def modify_backend(self, backend_uuid, ip=None, port=None, weight=None):
+        params = {}
+        if ip is not None: params["ip"] = ip
+        if port is not None: params["port"] = port
+        if weight is not None: params["weight"] = weight
 
-		return self.conn.request("PUT", "/%s/backend/%s" % (self.uuid, backend_uuid), params)
+        return self.conn.request("PUT", "/%s/backend/%s" % (self.uuid, backend_uuid), params)
 
 
 class LoadBalancerBackend(APIObject):
-	pass
+    pass
 
 
 class LoadBalancerAction(APIObject):
-	pass
+    pass
 
 class LoadBalancerBackendMonitor(APIObject):
-	pass
+    pass
