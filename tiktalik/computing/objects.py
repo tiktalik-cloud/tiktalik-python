@@ -213,7 +213,7 @@ class Instance(APIObject):
 
         self.conn.request("POST", "/instance/%s/force_stop" % self.uuid)
 
-    def backup(self,backup_name=None):
+    def backup(self,backup_name=''):
         """
         Start a backup operation. The instance must be stopped.
         """
