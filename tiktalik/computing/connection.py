@@ -1,20 +1,21 @@
+"""Module tiktalik.computing.connection"""
 # Copyright (c) 2013 Techstorage sp. z o.o.
-# 
-# Permission is hereby granted, free of charge, to any person obtaining a copy of 
-# this software and associated documentation files (the "Software"), to deal in 
-# the Software without restriction, including without limitation the rights to 
-# use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of 
-# the Software, and to permit persons to whom the Software is furnished to do so, 
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of
+# this software and associated documentation files (the "Software"), to deal in
+# the Software without restriction, including without limitation the rights to
+# use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+# the Software, and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
-# The above copyright notice and this permission notice shall be included in all 
+#
+# The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
-# 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS 
-# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR 
-# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER 
-# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import json
@@ -48,8 +49,7 @@ class ComputingConnection(TiktalikAuthConnection):
         :return: list of Instance objects
         """
 
-        response = self.request("GET", "/instance",
-                query_params={"actions": actions, "vpsimage": vpsimage, "cost": cost})
+        response = self.request("GET", "/instance", query_params={"actions": actions, "vpsimage": vpsimage, "cost": cost})
 
         return [Instance(self, i) for i in response]
 
@@ -124,8 +124,7 @@ class ComputingConnection(TiktalikAuthConnection):
         :return: an Instance object that represents the instance specified by UUID
         """
 
-        response = self.request("GET", "/instance/" + uuid,
-                query_params={"actions": actions, "vpsimage": vpsimage, "cost": cost})
+        response = self.request("GET", "/instance/" + uuid, query_params={"actions": actions, "vpsimage": vpsimage, "cost": cost})
         return Instance(self, response)
 
     def get_instance_block_devices(self, uuid):
@@ -154,7 +153,7 @@ class ComputingConnection(TiktalikAuthConnection):
         response = self.request("GET", "/image/" + image_uuid)
         return VPSImage(self, response)
 
-    def create_instance(self, hostname, size, image_uuid, networks, ssh_key = None, disk_size_gb = None):
+    def create_instance(self, hostname, size, image_uuid, networks, ssh_key=None, disk_size_gb=None):
         """
         Create a new instance.
 
@@ -229,8 +228,7 @@ class ComputingConnection(TiktalikAuthConnection):
                     by the operating system's configuration, eg. "3" maps to "eth3"
         """
 
-        self.request("POST", "/instance/%s/interface" % instance_uuid,
-            dict(network_uuid=network_uuid, seq=seq))
+        self.request("POST", "/instance/%s/interface" % instance_uuid, dict(network_uuid=network_uuid, seq=seq))
 
     def remove_network_interface(self, instance_uuid, interface_uuid):
         """
