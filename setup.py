@@ -1,3 +1,4 @@
+"""Tiktalik Cloud Computing Platform SDK for Python"""
 from setuptools import setup
 
 setup(
