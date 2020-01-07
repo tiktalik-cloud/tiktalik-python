@@ -21,6 +21,7 @@
 from .objects import *
 from ..connection import TiktalikAuthConnection
 
+
 class LoadBalancerConnection(TiktalikAuthConnection):
     def base_url(self):
         return "/api/v1/loadbalancer"
@@ -33,7 +34,9 @@ class LoadBalancerConnection(TiktalikAuthConnection):
         response = self.request("GET", "/%s" % uuid)
         return LoadBalancer(self, response)
 
-    def create_loadbalancer(self, name, proto, address=None, port=None, backends=None, domains=None):
+    def create_loadbalancer(
+        self, name, proto, address=None, port=None, backends=None, domains=None
+    ):
         """
         Create new load balancer instance
 
@@ -60,7 +63,7 @@ class LoadBalancerConnection(TiktalikAuthConnection):
             "name": name,
             "type": proto,
             "backends[]": ["%s:%i:%i" % b for b in backends],
-            }
+        }
         if address:
             params["address"] = address
         if port:

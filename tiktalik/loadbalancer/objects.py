@@ -25,6 +25,7 @@ from ..apiobject import APIObject
 
 __all__ = ["LoadBalancer", "LoadBalancerBackend", "LoadBalancerAction"]
 
+
 class LoadBalancer(APIObject):
     """A LoadBalancer instance. Contains a list of domains and backends,
     and optionally a history of operations performed on this instance.
@@ -37,7 +38,9 @@ class LoadBalancer(APIObject):
 
         self.backends = [LoadBalancerBackend(conn, i) for i in self.backends]
         self.monitor = LoadBalancerBackendMonitor(conn, self.monitor)
-        self.history = [LoadBalancerAction(conn, i) for i in self.history] if self.history else []
+        self.history = (
+            [LoadBalancerAction(conn, i) for i in self.history] if self.history else []
+        )
 
     def __str__(self):
         return "<LoadBalancer:(%s) %s>" % (self.uuid, self.name)
@@ -95,7 +98,9 @@ class LoadBalancer(APIObject):
         return self.conn.request("DELETE", "/%s" % self.uuid)
 
     def set_domains(self, domains):
-        return self.conn.request("POST", "/%s/domain" % self.uuid, {"domains[]": domains})
+        return self.conn.request(
+            "POST", "/%s/domain" % self.uuid, {"domains[]": domains}
+        )
 
     def add_domain(self, domain):
         return self.conn.request("PUT", "/%s/domain" % self.uuid, {"domain": domain})
@@ -108,21 +113,34 @@ class LoadBalancer(APIObject):
         backends: list of (ip, port, weight)
         """
 
-        return self.conn.request("POST", "/%s/backend" % self.uuid, {"backends[]": ["%s:%i:%i" % b for b in backends]})
+        return self.conn.request(
+            "POST",
+            "/%s/backend" % self.uuid,
+            {"backends[]": ["%s:%i:%i" % b for b in backends]},
+        )
 
     def add_backend(self, ip, port, weight):
-        return self.conn.request("PUT", "/%s/backend" % self.uuid, {"backend": "%s:%i:%i" % (ip, port, weight)})
+        return self.conn.request(
+            "PUT",
+            "/%s/backend" % self.uuid,
+            {"backend": "%s:%i:%i" % (ip, port, weight)},
+        )
 
     def remove_backend(self, backend_uuid):
         return self.conn.request("DELETE", "/%s/backend/%s" % (self.uuid, backend_uuid))
 
     def modify_backend(self, backend_uuid, ip=None, port=None, weight=None):
         params = {}
-        if ip is not None: params["ip"] = ip
-        if port is not None: params["port"] = port
-        if weight is not None: params["weight"] = weight
+        if ip is not None:
+            params["ip"] = ip
+        if port is not None:
+            params["port"] = port
+        if weight is not None:
+            params["weight"] = weight
 
-        return self.conn.request("PUT", "/%s/backend/%s" % (self.uuid, backend_uuid), params)
+        return self.conn.request(
+            "PUT", "/%s/backend/%s" % (self.uuid, backend_uuid), params
+        )
 
 
 class LoadBalancerBackend(APIObject):
@@ -131,6 +149,7 @@ class LoadBalancerBackend(APIObject):
 
 class LoadBalancerAction(APIObject):
     pass
+
 
 class LoadBalancerBackendMonitor(APIObject):
     pass

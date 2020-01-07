@@ -14,6 +14,5 @@ setup(
         "Topic :: Software Development :: Libraries",
         "License :: OSI Approved :: MIT License",
     ],
-
     packages=["tiktalik", "tiktalik.computing", "tiktalik.loadbalancer"],
 )

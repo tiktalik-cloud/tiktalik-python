@@ -23,6 +23,7 @@
 from ..error import TiktalikAPIError
 from ..apiobject import APIObject
 
+
 class Network(APIObject):
     """
     A user- or system-owned network. Each Instance has zero or more networks
@@ -50,6 +51,7 @@ class Network(APIObject):
 
         return conn.list_networks()
 
+
 class VPSNetInterface(APIObject):
     """
     A network interface attached to an Instance. Maps directly to a network interface
@@ -70,6 +72,7 @@ class VPSNetInterface(APIObject):
 
     def __str__(self):
         return "<VPSNetInterface:(%s) ip=%s>" % (self.uuid, self.ip)
+
 
 class VPSImage(APIObject):
     """
@@ -111,6 +114,7 @@ class VPSImage(APIObject):
 
         self.conn.delete_image(self.uuid)
 
+
 class Operation(APIObject):
     """
     Description of an operation that was performed on an Instance.
@@ -118,14 +122,25 @@ class Operation(APIObject):
     """
 
     def __str__(self):
-        return "<Operation:(%s) start=%s, end=%s, %s>" % (self.uuid, self.start_time, self.end_time, self.description)
+        return "<Operation:(%s) start=%s, end=%s, %s>" % (
+            self.uuid,
+            self.start_time,
+            self.end_time,
+            self.description,
+        )
+
 
 class BlockDevice(APIObject):
     """ Represents an Instance's attached block device.
     """
 
     def __str__(self):
-        return "<BlockDevice:(%s) size=%s GB, seq=%d>" % (self.uuid, self.size_gb, self.seq)
+        return "<BlockDevice:(%s) size=%s GB, seq=%d>" % (
+            self.uuid,
+            self.size_gb,
+            self.seq,
+        )
+
 
 class Instance(APIObject):
     """
@@ -149,8 +164,14 @@ class Instance(APIObject):
         gross_cost_per_hour: float,
         block_devices: List[BlockDevice]  -- must be loaded by call .load_block_devices()
     """
+
     def __init__(self, conn, json_dict):
-        defaults = {"actions":[], "vpsimage":None, "gross_cost_per_hour":None, "block_devices":None}
+        defaults = {
+            "actions": [],
+            "vpsimage": None,
+            "gross_cost_per_hour": None,
+            "block_devices": None,
+        }
 
         super(Instance, self).__init__(conn, json_dict, defaults)
 
@@ -179,7 +200,11 @@ class Instance(APIObject):
         """
 
         hostname = hostname.lower()
-        instances = [i for i in conn.list_instances(actions, vpsimage, cost) if i.hostname.lower() == hostname]
+        instances = [
+            i
+            for i in conn.list_instances(actions, vpsimage, cost)
+            if i.hostname.lower() == hostname
+        ]
         if not instances:
             raise TiktalikAPIError(404)
         return instances
@@ -214,11 +239,15 @@ class Instance(APIObject):
 
         self.conn.request("POST", "/instance/%s/force_stop" % self.uuid)
 
-    def backup(self, backup_name=''):
+    def backup(self, backup_name=""):
         """
         Start a backup operation. The instance must be stopped.
         """
-        self.conn.request("POST", "/instance/%s/backup" % self.uuid, params={'backup_name': backup_name})
+        self.conn.request(
+            "POST",
+            "/instance/%s/backup" % self.uuid,
+            params={"backup_name": backup_name},
+        )
 
     def list_interfaces(self):
         """
@@ -254,4 +283,9 @@ class Instance(APIObject):
         return self.block_devices
 
     def __str__(self):
-        return "<Instance(%s): %s, state=%s, running=%s>" % (self.uuid, self.hostname, self.state, self.running)
+        return "<Instance(%s): %s, state=%s, running=%s>" % (
+            self.uuid,
+            self.hostname,
+            self.state,
+            self.running,
+        )

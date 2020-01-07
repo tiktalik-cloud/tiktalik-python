@@ -29,12 +29,15 @@ import string
 from hashlib import sha1, md5
 from .error import TiktalikAPIError
 
+
 class TiktalikAuthConnection:
     """
     Simple wrapper for HTTPConnection. Adds authentication information to requests.
     """
 
-    def __init__(self, api_key, api_secret_key, host="tiktalik.com", port=443, use_ssl=True):
+    def __init__(
+        self, api_key, api_secret_key, host="tiktalik.com", port=443, use_ssl=True
+    ):
         self.api_key = api_key
         self.api_secret_key = api_secret_key
         self.host = host
@@ -45,7 +48,14 @@ class TiktalikAuthConnection:
         # needed secret key decoded to binary string, so now try to handle both input
         # forms: deprecated decoded one and "normal" encoded as base64.
         try:
-            if len(self.api_secret_key.lstrip(string.ascii_letters + string.digits + '+/=')) == 0:
+            if (
+                len(
+                    self.api_secret_key.lstrip(
+                        string.ascii_letters + string.digits + "+/="
+                    )
+                )
+                == 0
+            ):
                 self.api_secret_key = base64.standard_b64decode(self.api_secret_key)
         except TypeError:
             pass
@@ -68,7 +78,6 @@ class TiktalikAuthConnection:
 
         return value
 
-
     def request(self, method, path, params=None, query_params=None):
         """
         Send a request over HTTP. The inheriting class must override self.base_url().
@@ -90,7 +99,9 @@ class TiktalikAuthConnection:
                  Raw data otherwise. None, if the reply was empty.
         """
 
-        response = self.make_request(method, self.base_url() + path, params=params, query_params=query_params)
+        response = self.make_request(
+            method, self.base_url() + path, params=params, query_params=query_params
+        )
 
         data = response.read()
         if response.getheader("Content-Type", "").startswith("application/json"):
@@ -109,8 +120,9 @@ class TiktalikAuthConnection:
 
         raise NotImplementedError()
 
-
-    def make_request(self, method, path, headers=None, body=None, params=None, query_params=None):
+    def make_request(
+        self, method, path, headers=None, body=None, params=None, query_params=None
+    ):
         """
         Sends request, returns httplib.HTTPResponse.
 
@@ -124,7 +136,10 @@ class TiktalikAuthConnection:
         headers = headers or {}
 
         if params:
-            params = dict((k.encode("utf8"), self._encode_param(v)) for (k, v) in list(params.items()))
+            params = dict(
+                (k.encode("utf8"), self._encode_param(v))
+                for (k, v) in list(params.items())
+            )
             body = parse.urlencode(params, True)
             headers["content-type"] = "application/x-www-form-urlencoded"
 
@@ -136,7 +151,7 @@ class TiktalikAuthConnection:
                 if isinstance(value, bool):
                     qp[key] = "true" if value else "false"
                 else:
-                    #assert isinstance(value, (str, int))
+                    # assert isinstance(value, (str, int))
                     qp[key.encode("utf8")] = self._encode_param(value)
 
             qp = parse.urlencode(qp, True)
@@ -165,7 +180,15 @@ class TiktalikAuthConnection:
         return headers
 
     def _canonical_string(self, method, path, headers):
-        S = "\n".join((method, headers.get("content-md5", ""), headers.get("content-type", ""), headers["date"], path))
+        S = "\n".join(
+            (
+                method,
+                headers.get("content-md5", ""),
+                headers.get("content-type", ""),
+                headers["date"],
+                path,
+            )
+        )
         return S
 
     def _sign_string(self, S):
