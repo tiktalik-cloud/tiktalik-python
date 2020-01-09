@@ -3,7 +3,8 @@ from setuptools import setup
 
 setup(
     name="tiktalik",
-    version="1.5.2",
+    version="1.6.3",
+    python_requires='>=3.5',
     description="Python SDK for the Tiktalik Computing service.",
     author="Techstorage sp. z o.o",
     author_email="kontakt@tiktalik.com",
