@@ -1,1 +1,4 @@
 *.pyc
+tiktalik.egg-info/
+dist/
+build/
