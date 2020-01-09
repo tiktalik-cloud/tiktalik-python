@@ -244,3 +244,22 @@ class ComputingConnection(TiktalikAuthConnection):
         """
 
         self.request("DELETE", "/instance/%s/interface/%s" % (instance_uuid, interface_uuid))
+    
+    def rename_image(self, uuid, name):
+        """
+        Rename an image.
+        
+        :type uuid: string
+        :param uuid: UUID of the image
+        
+        :type name: string
+        :param name: New name for the image
+        """
+
+        params = dict(image_name=name)
+
+        self.request(
+            "POST",
+            "/image/%s/set_name" % uuid,
+            params,
+        )
