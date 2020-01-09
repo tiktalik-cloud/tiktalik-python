@@ -163,7 +163,7 @@ class ComputingConnection(TiktalikAuthConnection):
         return VPSImage(self, response)
 
     def create_instance(
-        self, hostname, size, image_uuid, networks, ssh_key=None, disk_size_gb=None
+            self, hostname, size, image_uuid, networks, ssh_key=None, disk_size_gb=None
     ):
         """
         Create a new instance.
@@ -269,9 +269,11 @@ class ComputingConnection(TiktalikAuthConnection):
         :type name: string
         :param name: New name for the image
         """
-        
+
+        params = dict(image_name=name)
+
         self.request(
             "POST",
             "/image/%s/set_name" % uuid,
-            name,
+            params,
         )
