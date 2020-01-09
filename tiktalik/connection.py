@@ -158,7 +158,7 @@ class TiktalikAuthConnection:
             path = "%s?%s" % (path, qp)
 
         if body:
-            m = md5(body)
+            m = md5(body.encode('utf-8'))
             headers["content-md5"] = m.hexdigest()
 
         conn = self.conn_cls(self.host, self.port, timeout=self.timeout)
@@ -192,5 +192,5 @@ class TiktalikAuthConnection:
         return S
 
     def _sign_string(self, S):
-        digest = base64.b64encode(hmac.new(self.api_secret_key, S, sha1).digest())
-        return digest
+        digest = base64.b64encode(hmac.new(self.api_secret_key, S.encode('utf-8'), sha1).digest())
+        return digest.decode('utf-8')

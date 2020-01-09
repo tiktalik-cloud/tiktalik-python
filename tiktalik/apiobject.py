@@ -26,14 +26,14 @@ class APIObject:
     Base class for all objects returned by the API.
     """
 
-    def __init__(self, conn, json_dict, defaults=None):
+    def __init__(self, conn, json_dict, defaults=dict()):
         super(APIObject, self).__init__()
 
         self.conn = conn
 
-        for key, value in list(json_dict.items()):
+        for key, value in json_dict.items():
             setattr(self, key, value)
 
-        for key, value in list(defaults.items()):
+        for key, value in defaults.items():
             if key not in json_dict:
                 setattr(self, key, value)
