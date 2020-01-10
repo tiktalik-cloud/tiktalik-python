@@ -115,7 +115,8 @@ class TiktalikAuthConnection:
     def base_url(self):
         """
         :rtype: string
-        :return: base URL for API requests, eg. "/api/v1/computing". Must NOT include trailing slash.
+        :return: base URL for API requests, eg. "/api/v1/computing".
+                 Must NOT include trailing slash.
         """
 
         raise NotImplementedError()
@@ -158,11 +159,10 @@ class TiktalikAuthConnection:
             path = "%s?%s" % (path, qp)
 
         if body:
-            m = md5(body.encode('utf-8'))
+            m = md5(body.encode("utf-8"))
             headers["content-md5"] = m.hexdigest()
 
         conn = self.conn_cls(self.host, self.port, timeout=self.timeout)
-        # XXX: lowercase headers?
         headers = self._add_auth_header(method, path, headers or {})
         # conn.set_debuglevel(3)
         conn.request(method, path, body, headers)
@@ -192,5 +192,7 @@ class TiktalikAuthConnection:
         return S
 
     def _sign_string(self, S):
-        digest = base64.b64encode(hmac.new(self.api_secret_key, S.encode('utf-8'), sha1).digest())
-        return digest.decode('utf-8')
+        digest = base64.b64encode(
+            hmac.new(self.api_secret_key, S.encode("utf-8"), sha1).digest()
+        )
+        return digest.decode("utf-8")

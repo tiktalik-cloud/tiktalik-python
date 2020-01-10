@@ -191,7 +191,8 @@ class Instance(APIObject):
     @classmethod
     def get_by_hostname(cls, conn, hostname, actions=False, vpsimage=False, cost=False):
         """
-        Fetch a list of instances with matching hostname. Raise TiktalikAPIError when there is no match.
+        Fetch a list of instances with matching hostname.
+        Raise TiktalikAPIError when there is no match.
 
         :seealso: ComputingConnection.list_instances()
 
