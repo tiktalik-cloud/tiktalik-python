@@ -67,7 +67,7 @@ class TiktalikAuthConnection:
 
         self.use_ssl = use_ssl
 
-        self.timeout = 5
+        self.timeout = 20
         self.conn = None
 
     def _encode_param(self, value):
@@ -139,7 +139,7 @@ class TiktalikAuthConnection:
         if params:
             params = dict(
                 (k.encode("utf8"), self._encode_param(v))
-                for (k, v) in list(params.items())
+                for (k, v) in params.items()
             )
             body = parse.urlencode(params, True)
             headers["content-type"] = "application/x-www-form-urlencoded"
@@ -148,7 +148,7 @@ class TiktalikAuthConnection:
 
         if query_params:
             qp = {}
-            for key, value in list(query_params.items()):
+            for key, value in query_params.items():
                 if isinstance(value, bool):
                     qp[key] = "true" if value else "false"
                 else:
