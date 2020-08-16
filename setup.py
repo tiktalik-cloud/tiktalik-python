@@ -10,7 +10,7 @@ setup(
     author_email="kontakt@tiktalik.com",
     url="http://www.tiktalik.com",
     license="MIT",
-    keywords = ['SDK', 'Tiktalik', 'VPS']
+    keywords = ['SDK', 'Tiktalik', 'VPS'],
     classifiers=[
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.5",
