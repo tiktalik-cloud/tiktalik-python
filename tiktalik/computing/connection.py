@@ -266,6 +266,7 @@ class ComputingConnection(TiktalikAuthConnection):
         :type uuid: string
         :param uuid: UUID of the image
 
+
         :type name: string
         :param name: New name for the image
         """
@@ -273,5 +274,7 @@ class ComputingConnection(TiktalikAuthConnection):
         params = dict(image_name=name)
 
         self.request(
-            "POST", "/image/%s/set_name" % uuid, params,
+            "POST",
+            "/image/%s/set_name" % uuid,
+            params,
         )
