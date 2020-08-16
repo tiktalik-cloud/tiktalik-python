@@ -1,5 +1,5 @@
 """Tiktalik Cloud Computing Platform SDK for Python"""
-from setuptools import setup
+from distutils.core import setup
 
 setup(
     name="tiktalik",
@@ -9,11 +9,19 @@ setup(
     author="Techstorage sp. z o.o",
     author_email="kontakt@tiktalik.com",
     url="http://www.tiktalik.com",
+    license="MIT",
+    keywords = ['SDK', 'Tiktalik', 'VPS']
     classifiers=[
-        "Programming Language :: Python",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
         "Topic :: Internet",
         "Topic :: Software Development :: Libraries",
         "License :: OSI Approved :: MIT License",
+        "Development Status :: 5 - Production/Stable",
+        "Intended Audience :: Developers"
     ],
     packages=["tiktalik", "tiktalik.computing", "tiktalik.loadbalancer"],
 )
