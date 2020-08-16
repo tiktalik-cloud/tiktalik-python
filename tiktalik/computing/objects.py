@@ -1,26 +1,28 @@
+"""Module tiktalik.computing.objects"""
 # Copyright (c) 2013 Techstorage sp. z o.o.
-# 
-# Permission is hereby granted, free of charge, to any person obtaining a copy of 
-# this software and associated documentation files (the "Software"), to deal in 
-# the Software without restriction, including without limitation the rights to 
-# use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of 
-# the Software, and to permit persons to whom the Software is furnished to do so, 
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of
+# this software and associated documentation files (the "Software"), to deal in
+# the Software without restriction, including without limitation the rights to
+# use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+# the Software, and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
-# The above copyright notice and this permission notice shall be included in all 
+#
+# The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
-# 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS 
-# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR 
-# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER 
-# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 # -*- coding: utf8 -*-
 
 from ..error import TiktalikAPIError
 from ..apiobject import APIObject
+
 
 class Network(APIObject):
     """
@@ -49,6 +51,7 @@ class Network(APIObject):
 
         return conn.list_networks()
 
+
 class VPSNetInterface(APIObject):
     """
     A network interface attached to an Instance. Maps directly to a network interface
@@ -69,6 +72,7 @@ class VPSNetInterface(APIObject):
 
     def __str__(self):
         return "<VPSNetInterface:(%s) ip=%s>" % (self.uuid, self.ip)
+
 
 class VPSImage(APIObject):
     """
@@ -110,6 +114,7 @@ class VPSImage(APIObject):
 
         self.conn.delete_image(self.uuid)
 
+
 class Operation(APIObject):
     """
     Description of an operation that was performed on an Instance.
@@ -117,14 +122,25 @@ class Operation(APIObject):
     """
 
     def __str__(self):
-        return "<Operation:(%s) start=%s, end=%s, %s>" % (self.uuid, self.start_time, self.end_time, self.description)
+        return "<Operation:(%s) start=%s, end=%s, %s>" % (
+            self.uuid,
+            self.start_time,
+            self.end_time,
+            self.description,
+        )
+
 
 class BlockDevice(APIObject):
     """ Represents an Instance's attached block device.
     """
 
     def __str__(self):
-        return "<BlockDevice:(%s) size=%s GB, seq=%d>" % (self.uuid, self.size_gb, self.seq)
+        return "<BlockDevice:(%s) size=%s GB, seq=%d>" % (
+            self.uuid,
+            self.size_gb,
+            self.seq,
+        )
+
 
 class Instance(APIObject):
     """
@@ -148,8 +164,14 @@ class Instance(APIObject):
         gross_cost_per_hour: float,
         block_devices: List[BlockDevice]  -- must be loaded by call .load_block_devices()
     """
+
     def __init__(self, conn, json_dict):
-        defaults = {"actions":[], "vpsimage":None, "gross_cost_per_hour":None, "block_devices":None}
+        defaults = {
+            "actions": [],
+            "vpsimage": None,
+            "gross_cost_per_hour": None,
+            "block_devices": None,
+        }
 
         super(Instance, self).__init__(conn, json_dict, defaults)
 
@@ -169,7 +191,8 @@ class Instance(APIObject):
     @classmethod
     def get_by_hostname(cls, conn, hostname, actions=False, vpsimage=False, cost=False):
         """
-        Fetch a list of instances with matching hostname. Raise TiktalikAPIError when there is no match.
+        Fetch a list of instances with matching hostname.
+        Raise TiktalikAPIError when there is no match.
 
         :seealso: ComputingConnection.list_instances()
 
@@ -178,7 +201,11 @@ class Instance(APIObject):
         """
 
         hostname = hostname.lower()
-        instances = [i for i in conn.list_instances(actions, vpsimage, cost) if i.hostname.lower() == hostname]
+        instances = [
+            i
+            for i in conn.list_instances(actions, vpsimage, cost)
+            if i.hostname.lower() == hostname
+        ]
         if not instances:
             raise TiktalikAPIError(404)
         return instances
@@ -213,11 +240,15 @@ class Instance(APIObject):
 
         self.conn.request("POST", "/instance/%s/force_stop" % self.uuid)
 
-    def backup(self,backup_name=''):
+    def backup(self, backup_name=""):
         """
         Start a backup operation. The instance must be stopped.
         """
-        self.conn.request("POST", "/instance/%s/backup" % self.uuid, params={'backup_name': backup_name})
+        self.conn.request(
+            "POST",
+            "/instance/%s/backup" % self.uuid,
+            params={"backup_name": backup_name},
+        )
 
     def list_interfaces(self):
         """
@@ -241,7 +272,7 @@ class Instance(APIObject):
         """
         :seealso: ComputingConnection.remove_network_interface()
         """
-        
+
         self.conn.remove_network_interface(self.uuid, interface_uuid)
 
     def load_block_devices(self):
@@ -253,4 +284,9 @@ class Instance(APIObject):
         return self.block_devices
 
     def __str__(self):
-        return "<Instance(%s): %s, state=%s, running=%s>" % (self.uuid, self.hostname, self.state, self.running)
+        return "<Instance(%s): %s, state=%s, running=%s>" % (
+            self.uuid,
+            self.hostname,
+            self.state,
+            self.running,
+        )

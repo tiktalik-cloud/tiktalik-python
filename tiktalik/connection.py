@@ -1,34 +1,43 @@
+"""Module tiktalik.connection"""
 # Copyright (c) 2013 Techstorage sp. z o.o.
-# 
-# Permission is hereby granted, free of charge, to any person obtaining a copy of 
-# this software and associated documentation files (the "Software"), to deal in 
-# the Software without restriction, including without limitation the rights to 
-# use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of 
-# the Software, and to permit persons to whom the Software is furnished to do so, 
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of
+# this software and associated documentation files (the "Software"), to deal in
+# the Software without restriction, including without limitation the rights to
+# use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+# the Software, and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
-# The above copyright notice and this permission notice shall be included in all 
+#
+# The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
-# 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS 
-# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR 
-# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER 
-# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 # -*- coding: utf8 -*-
-
-import time, httplib, hmac, base64, sha, urllib, md5, json, string
+import time
+import http.client
+import hmac
+import base64
+from urllib import parse
+import json
+import string
+from hashlib import sha1, md5
 from .error import TiktalikAPIError
 
-class TiktalikAuthConnection(object):
+
+class TiktalikAuthConnection:
     """
     Simple wrapper for HTTPConnection. Adds authentication information to requests.
     """
 
-    def __init__(self, api_key, api_secret_key, host="tiktalik.com", port=443,
-            use_ssl=True):
+    def __init__(
+        self, api_key, api_secret_key, host="tiktalik.com", port=443, use_ssl=True
+    ):
         self.api_key = api_key
         self.api_secret_key = api_secret_key
         self.host = host
@@ -39,29 +48,35 @@ class TiktalikAuthConnection(object):
         # needed secret key decoded to binary string, so now try to handle both input
         # forms: deprecated decoded one and "normal" encoded as base64.
         try:
-            if len(self.api_secret_key.lstrip(string.letters + string.digits + '+/=')) == 0:
+            if (
+                len(
+                    self.api_secret_key.lstrip(
+                        string.ascii_letters + string.digits + "+/="
+                    )
+                )
+                == 0
+            ):
                 self.api_secret_key = base64.standard_b64decode(self.api_secret_key)
         except TypeError:
             pass
 
         if use_ssl:
-            self.conn_cls = httplib.HTTPSConnection
+            self.conn_cls = http.client.HTTPSConnection
         else:
-            self.conn_cls = httplib.HTTPConnection
+            self.conn_cls = http.client.HTTPConnection
 
         self.use_ssl = use_ssl
 
-        self.timeout = 5
+        self.timeout = 20
         self.conn = None
 
     def _encode_param(self, value):
         if isinstance(value, list):
-            return map(self._encode_param, value)
-        elif isinstance(value, basestring):
+            return list(map(self._encode_param, value))
+        elif isinstance(value, str):
             return value.encode("utf8")
 
         return value
-
 
     def request(self, method, path, params=None, query_params=None):
         """
@@ -84,7 +99,9 @@ class TiktalikAuthConnection(object):
                  Raw data otherwise. None, if the reply was empty.
         """
 
-        response = self.make_request(method, self.base_url() + path, params=params, query_params=query_params)
+        response = self.make_request(
+            method, self.base_url() + path, params=params, query_params=query_params
+        )
 
         data = response.read()
         if response.getheader("Content-Type", "").startswith("application/json"):
@@ -98,13 +115,15 @@ class TiktalikAuthConnection(object):
     def base_url(self):
         """
         :rtype: string
-        :return: base URL for API requests, eg. "/api/v1/computing". Must NOT include trailing slash.
+        :return: base URL for API requests, eg. "/api/v1/computing".
+                 Must NOT include trailing slash.
         """
 
         raise NotImplementedError()
 
-
-    def make_request(self, method, path, headers=None, body=None, params=None, query_params=None):
+    def make_request(
+        self, method, path, headers=None, body=None, params=None, query_params=None
+    ):
         """
         Sends request, returns httplib.HTTPResponse.
 
@@ -118,30 +137,32 @@ class TiktalikAuthConnection(object):
         headers = headers or {}
 
         if params:
-            params = dict((k.encode("utf8"), self._encode_param(v)) for (k, v) in params.iteritems())
-            body = urllib.urlencode(params, True)
+            params = dict(
+                (k.encode("utf8"), self._encode_param(v))
+                for (k, v) in params.items()
+            )
+            body = parse.urlencode(params, True)
             headers["content-type"] = "application/x-www-form-urlencoded"
 
-        path = urllib.quote(path.encode("utf8"))
+        path = parse.quote(path.encode("utf8"))
 
         if query_params:
             qp = {}
-            for key, value in query_params.iteritems():
+            for key, value in query_params.items():
                 if isinstance(value, bool):
                     qp[key] = "true" if value else "false"
                 else:
-                    #assert isinstance(value, (str, int))
+                    # assert isinstance(value, (str, int))
                     qp[key.encode("utf8")] = self._encode_param(value)
 
-            qp = urllib.urlencode(qp, True)
+            qp = parse.urlencode(qp, True)
             path = "%s?%s" % (path, qp)
 
         if body:
-            m = md5.new(body)
+            m = md5(body.encode("utf-8"))
             headers["content-md5"] = m.hexdigest()
 
         conn = self.conn_cls(self.host, self.port, timeout=self.timeout)
-        # XXX: lowercase headers?
         headers = self._add_auth_header(method, path, headers or {})
         # conn.set_debuglevel(3)
         conn.request(method, path, body, headers)
@@ -159,10 +180,19 @@ class TiktalikAuthConnection(object):
         return headers
 
     def _canonical_string(self, method, path, headers):
-        S = "\n".join((method, headers.get("content-md5", ""),
-            headers.get("content-type", ""), headers["date"], path))
+        S = "\n".join(
+            (
+                method,
+                headers.get("content-md5", ""),
+                headers.get("content-type", ""),
+                headers["date"],
+                path,
+            )
+        )
         return S
 
     def _sign_string(self, S):
-        digest = base64.b64encode(hmac.new(self.api_secret_key, S, sha).digest())
-        return digest
+        digest = base64.b64encode(
+            hmac.new(self.api_secret_key, S.encode("utf-8"), sha1).digest()
+        )
+        return digest.decode("utf-8")

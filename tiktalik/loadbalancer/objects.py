@@ -1,20 +1,21 @@
+"""Module tiktalik.loadbalancer.objects"""
 # Copyright (c) 2013 Techstorage sp. z o.o.
-# 
-# Permission is hereby granted, free of charge, to any person obtaining a copy of 
-# this software and associated documentation files (the "Software"), to deal in 
-# the Software without restriction, including without limitation the rights to 
-# use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of 
-# the Software, and to permit persons to whom the Software is furnished to do so, 
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of
+# this software and associated documentation files (the "Software"), to deal in
+# the Software without restriction, including without limitation the rights to
+# use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+# the Software, and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
-# The above copyright notice and this permission notice shall be included in all 
+#
+# The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
-# 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS 
-# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR 
-# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER 
-# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 # -*- coding: utf8 -*-
@@ -23,6 +24,7 @@ from ..error import TiktalikAPIError
 from ..apiobject import APIObject
 
 __all__ = ["LoadBalancer", "LoadBalancerBackend", "LoadBalancerAction"]
+
 
 class LoadBalancer(APIObject):
     """A LoadBalancer instance. Contains a list of domains and backends,
@@ -36,7 +38,9 @@ class LoadBalancer(APIObject):
 
         self.backends = [LoadBalancerBackend(conn, i) for i in self.backends]
         self.monitor = LoadBalancerBackendMonitor(conn, self.monitor)
-        self.history = [LoadBalancerAction(conn, i) for i in self.history] if self.history else []
+        self.history = (
+            [LoadBalancerAction(conn, i) for i in self.history] if self.history else []
+        )
 
     def __str__(self):
         return "<LoadBalancer:(%s) %s>" % (self.uuid, self.name)
@@ -88,19 +92,18 @@ class LoadBalancer(APIObject):
         :param name: new name
         """
 
-        return self.conn.request("PUT", "/%s/name" % self.uuid,
-            {"name": name})
+        return self.conn.request("PUT", "/%s/name" % self.uuid, {"name": name})
 
     def delete(self):
         return self.conn.request("DELETE", "/%s" % self.uuid)
 
     def set_domains(self, domains):
-        return self.conn.request("POST", "/%s/domain" % self.uuid,
-            {"domains[]": domains})
-    
+        return self.conn.request(
+            "POST", "/%s/domain" % self.uuid, {"domains[]": domains}
+        )
+
     def add_domain(self, domain):
-        return self.conn.request("PUT", "/%s/domain" % self.uuid,
-            {"domain": domain})
+        return self.conn.request("PUT", "/%s/domain" % self.uuid, {"domain": domain})
 
     def remove_domain(self, domain):
         return self.conn.request("DELETE", "/%s/domain/%s" % (self.uuid, domain))
@@ -110,23 +113,34 @@ class LoadBalancer(APIObject):
         backends: list of (ip, port, weight)
         """
 
-        return self.conn.request("POST", "/%s/backend" % self.uuid,
-            {"backends[]": ["%s:%i:%i" % b for b in backends]})
+        return self.conn.request(
+            "POST",
+            "/%s/backend" % self.uuid,
+            {"backends[]": ["%s:%i:%i" % b for b in backends]},
+        )
 
     def add_backend(self, ip, port, weight):
-        return self.conn.request("PUT", "/%s/backend" % self.uuid,
-            {"backend": "%s:%i:%i" % (ip, port, weight)})
+        return self.conn.request(
+            "PUT",
+            "/%s/backend" % self.uuid,
+            {"backend": "%s:%i:%i" % (ip, port, weight)},
+        )
 
     def remove_backend(self, backend_uuid):
         return self.conn.request("DELETE", "/%s/backend/%s" % (self.uuid, backend_uuid))
 
     def modify_backend(self, backend_uuid, ip=None, port=None, weight=None):
         params = {}
-        if ip is not None: params["ip"] = ip
-        if port is not None: params["port"] = port
-        if weight is not None: params["weight"] = weight
+        if ip is not None:
+            params["ip"] = ip
+        if port is not None:
+            params["port"] = port
+        if weight is not None:
+            params["weight"] = weight
 
-        return self.conn.request("PUT", "/%s/backend/%s" % (self.uuid, backend_uuid), params)
+        return self.conn.request(
+            "PUT", "/%s/backend/%s" % (self.uuid, backend_uuid), params
+        )
 
 
 class LoadBalancerBackend(APIObject):
@@ -135,6 +149,7 @@ class LoadBalancerBackend(APIObject):
 
 class LoadBalancerAction(APIObject):
     pass
+
 
 class LoadBalancerBackendMonitor(APIObject):
     pass
