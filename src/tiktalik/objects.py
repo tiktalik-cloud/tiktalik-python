@@ -20,8 +20,8 @@
 
 # -*- coding: utf8 -*-
 
-from ..error import TiktalikAPIError
-from ..apiobject import APIObject
+from .error import TiktalikAPIError
+from .apiobject import APIObject
 
 
 class Network(APIObject):

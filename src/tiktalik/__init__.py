@@ -17,3 +17,11 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 from .error import TiktalikAPIError as TiktalikAPIError
+from .connection import TiktalikAuthConnection as TiktalikAuthConnection
+from .objects import (
+    Instance as Instance,
+    VPSImage as VPSImage,
+    BlockDevice as BlockDevice,
+    VPSNetInterface as VPSNetInterface,
+    Network as Network,
+)

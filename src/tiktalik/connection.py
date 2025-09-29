@@ -31,15 +31,11 @@ from hashlib import sha1, md5
 import httpx
 from httpx import Headers, Response
 
+from .objects import Instance, VPSImage, BlockDevice, VPSNetInterface, Network
 from .error import TiktalikAPIError
-from abc import ABC, abstractmethod
 
 
-class TiktalikAuthConnection(ABC):
-    """
-    Simple wrapper for HTTPConnection. Adds authentication information to requests.
-    """
-
+class TiktalikAuthConnection:
     def __init__(
         self,
         api_key: str,
@@ -56,6 +52,8 @@ class TiktalikAuthConnection(ABC):
         self.port = port
         self.use_ssl = use_ssl
         self.timeout = 20
+
+        self.__base_url = "/api/v1/computing"
 
         self.proxy_mounts: dict[str, Optional[httpx.BaseTransport]] = {}
 
@@ -89,7 +87,7 @@ class TiktalikAuthConnection(ABC):
 
         return value
 
-    def _request(
+    def __request(
         self,
         method: str,
         path: str,
@@ -117,7 +115,7 @@ class TiktalikAuthConnection(ABC):
         """
 
         response = self.__make_request(
-            method, self._base_url() + path, params=params, query_params=query_params
+            method, self.__base_url + path, params=params, query_params=query_params
         )
 
         data = response.text
@@ -133,10 +131,6 @@ class TiktalikAuthConnection(ABC):
             raise TiktalikAPIError(response.status_code, data)
 
         return data
-
-    @abstractmethod
-    def _base_url(self):
-        pass
 
     def __make_request(
         self,
@@ -221,3 +215,259 @@ class TiktalikAuthConnection(ABC):
             ).digest()
         )
         return digest.decode("utf-8")
+
+    def list_instances(self, actions=False, vpsimage=False, cost=False):
+        """
+        List all instances.
+
+        :type actions: boolean
+        :param actions: include recent actions in each Instance
+
+        :type vpsimage: boolean
+        :param vpsimage: include VPS Image details in each Instance
+
+        :type cost: boolean
+        :param cost: include cost per hour in each Instance
+
+        :rtype: list
+        :return: list of Instance objects
+        """
+
+        response = self.__request(
+            "GET",
+            "/instance",
+            query_params={"actions": actions, "vpsimage": vpsimage, "cost": cost},
+        )
+
+        return [Instance(self, i) for i in response]
+
+    def list_networks(self):
+        """
+        List all available networks.
+
+        :rtype: list
+        :return: list of Network objects
+        """
+
+        response = self.__request("GET", "/network")
+        return [Network(self, i) for i in response]
+
+    def create_network(self, name: str):
+        """
+        Create a new network.
+
+        A new instance will be created server-side, using the specified image,
+        attaching networks resolved by UUID. This call returns immediately,
+        the instance is created asynchronously.
+
+        :type name: string
+        :param name: Network name - as part of local domain. Max 15
+                     characters length (will be truncated), allowed
+                     characters are lower letters and digits. Must not
+                     starts with a digit.
+
+        :rtype: Network
+        :return: Network object
+        """
+
+        params = dict(name=name)
+        response = self.__request("POST", "/network", params)
+        return Network(self, response)
+
+    def list_images(self):
+        """
+        List all available VPS Images.
+
+        :rtype: list
+        :return: list of VPSImage objects
+        """
+
+        response = self.__request("GET", "/image")
+        return [VPSImage(self, i) for i in response]
+
+    def list_instance_interfaces(self, uuid: str):
+        """
+        List all interfaces attached to an Instance
+
+        :type uuid: string
+        :param uuid: Instance UUID
+
+        :rtype: list
+        :return: list of VPSNetInterface objects
+        """
+
+        response = self.__request("GET", "/instance/%s/interface" % uuid)
+        return [VPSNetInterface(self, i) for i in response]
+
+    def get_instance(self, uuid: str, actions=False, vpsimage=False, cost=False):
+        """
+        Fetch an Instance object from the server
+
+        :type uuid: string
+        :param uuid: Instance UUID
+
+        :seealso: `list_instances`
+
+        :rtype: Instance
+        :return: an Instance object that represents the instance specified by UUID
+        """
+
+        response = self.__request(
+            "GET",
+            "/instance/" + uuid,
+            query_params={"actions": actions, "vpsimage": vpsimage, "cost": cost},
+        )
+        return Instance(self, response)
+
+    def get_instance_block_devices(self, uuid: str):
+        """Fetch an Instances block devices from the server
+
+        :type uuid: string
+        :param uuid: Instance UUID
+
+        :rtype: List[BlockDevice]
+        """
+
+        response = self.__request("GET", "/instance/" + uuid + "/blockdevice")
+        return [BlockDevice(self, b) for b in response]
+
+    def get_image(self, image_uuid: str):
+        """
+        Fetch a VPSImage object from the server
+
+        :type image_uuid: string
+        :param image_uuid: VPSImage UUID
+
+        :rtype: VPSImage
+        :return: a VPSImage object that represents the image specified by UUID
+        """
+
+        response = self.__request("GET", "/image/" + image_uuid)
+        return VPSImage(self, response)
+
+    def create_instance(
+        self,
+        hostname: str,
+        size: str,
+        image_uuid: str,
+        networks: list[str],
+        ssh_key: Optional[str] = None,
+        disk_size_gb: Optional[int] = None,
+    ):
+        """
+        Create a new instance.
+
+        A new instance will be created server-side, using the specified image,
+        attaching networks resolved by UUID. This call returns immediately,
+        the instance is created asynchronously.
+
+        :type hostname: string
+        :param hostname: hostname that will be used for the new instance
+
+        :type size: string
+        :param size: instance size (or type); use 0.25, 0.5, 1 to 15 for PRO instances,
+                     or one of "cpuhog", "cpuhog4" for PRO-cpuhog instances,
+                     or one of "1s", "2s", "4s" for standard instances.
+
+        :type image_uuid: string
+        :param image_uuid: UUID of a VPSImage to be installed
+
+        :type networks: list
+        :param networks: list of network UUIDs to be attached to the new instance
+
+        :type disk_size_gb: int
+        :param disk_size_gb: for standard instances must set disk size in GB
+        """
+
+        params: dict[str, str | list[str] | int] = {
+            "hostname": hostname,
+            "size": size,
+            "image_uuid": image_uuid,
+            "networks[]": networks,
+        }
+
+        if ssh_key and ssh_key != "":
+            params["ssh_key"] = ssh_key
+
+        if disk_size_gb and isinstance(disk_size_gb, int):
+            params["disk_size_gb"] = disk_size_gb
+
+        return self.__request("POST", "/instance", params)
+
+    def delete_instance(self, uuid: str):
+        """
+        Delete Tiktalik Instance specified by UUID.
+
+        :type uuid: string
+        :param uuid: UUID of the instance to be deleted
+        """
+        self.__request("DELETE", "/instance/%s" % uuid)
+
+    def delete_image(self, uuid: str):
+        """
+        Delete a VPSImage specified by UUID.
+
+        :type uuid: string
+        :param uuid: UUID of the image to be deleted
+        """
+
+        self.__request("DELETE", "/image/%s" % uuid)
+
+    def add_network_interface(self, instance_uuid: str, network_uuid: str, seq: int):
+        """
+        Attach a new network interface to an Instance. The Instance doesn't
+        have to be stopped to perform this action. This action is performed
+        asynchronously.
+
+        :type instance_uuid: string
+        :param instance_uuid: UUID of the Instance
+
+        :type network_uuid: string
+        :param network_uuid: UUID of the Network to be attached
+
+        :type seq: int
+        :param seq: sequential number of the interface that will obtain an
+                    address belonging to the Network. This will be reflected
+                    by the operating system's configuration, eg. "3" maps to "eth3"
+        """
+
+        self.__request(
+            "POST",
+            "/instance/%s/interface" % instance_uuid,
+            dict(network_uuid=network_uuid, seq=seq),
+        )
+
+    def remove_network_interface(self, instance_uuid: str, interface_uuid: str):
+        """
+        Detach a network interface from an Instance.
+
+        :type instance_uuid: string
+        :param instance_uuid: UUID of the Instance
+
+        :type interface_uuid: string
+        :param interface_uuid: UUID of the Interface to be removed
+        """
+
+        self.__request(
+            "DELETE", "/instance/%s/interface/%s" % (instance_uuid, interface_uuid)
+        )
+
+    def rename_image(self, uuid: str, name: str):
+        """
+        Rename an image.
+
+        :type uuid: string
+        :param uuid: UUID of the image
+
+
+        :type name: string
+        :param name: New name for the image
+        """
+
+        params = dict(image_name=name)
+
+        self.__request(
+            "POST",
+            "/image/%s/set_name" % uuid,
+            params,
+        )

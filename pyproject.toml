@@ -1,7 +1,7 @@
 [project]
 name = "tiktalik"
 description = "Python SDK for the Tiktalik Computing service"
-version = "1.7"
+version = "1.8.0"
 authors = [
     {name = "Techstorage sp. z o.o", email = "kontakt@tiktalik.com"}
 ]
