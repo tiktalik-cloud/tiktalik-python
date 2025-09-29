@@ -1,4 +1,7 @@
 """Module tiktalik.computing.connection"""
+
+from typing import Optional
+
 # Copyright (c) 2013 Techstorage sp. z o.o.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -18,10 +21,7 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-import json
-
-from .objects import *
-from ..error import TiktalikAPIError
+from .objects import Instance, VPSImage, BlockDevice, VPSNetInterface, Network
 from ..connection import TiktalikAuthConnection
 
 
@@ -30,7 +30,7 @@ class ComputingConnection(TiktalikAuthConnection):
     Performs API calls. All method raise TiktalikAPIError on errors.
     """
 
-    def base_url(self):
+    def _base_url(self):
         return "/api/v1/computing"
 
     def list_instances(self, actions=False, vpsimage=False, cost=False):
@@ -50,7 +50,7 @@ class ComputingConnection(TiktalikAuthConnection):
         :return: list of Instance objects
         """
 
-        response = self.request(
+        response = self._request(
             "GET",
             "/instance",
             query_params={"actions": actions, "vpsimage": vpsimage, "cost": cost},
@@ -66,10 +66,10 @@ class ComputingConnection(TiktalikAuthConnection):
         :return: list of Network objects
         """
 
-        response = self.request("GET", "/network")
+        response = self._request("GET", "/network")
         return [Network(self, i) for i in response]
 
-    def create_network(self, name):
+    def create_network(self, name: str):
         """
         Create a new network.
 
@@ -88,7 +88,7 @@ class ComputingConnection(TiktalikAuthConnection):
         """
 
         params = dict(name=name)
-        response = self.request("POST", "/network", params)
+        response = self._request("POST", "/network", params)
         return Network(self, response)
 
     def list_images(self):
@@ -99,10 +99,10 @@ class ComputingConnection(TiktalikAuthConnection):
         :return: list of VPSImage objects
         """
 
-        response = self.request("GET", "/image")
+        response = self._request("GET", "/image")
         return [VPSImage(self, i) for i in response]
 
-    def list_instance_interfaces(self, uuid):
+    def list_instance_interfaces(self, uuid: str):
         """
         List all interfaces attached to an Instance
 
@@ -113,10 +113,10 @@ class ComputingConnection(TiktalikAuthConnection):
         :return: list of VPSNetInterface objects
         """
 
-        response = self.request("GET", "/instance/%s/interface" % uuid)
+        response = self._request("GET", "/instance/%s/interface" % uuid)
         return [VPSNetInterface(self, i) for i in response]
 
-    def get_instance(self, uuid, actions=False, vpsimage=False, cost=False):
+    def get_instance(self, uuid: str, actions=False, vpsimage=False, cost=False):
         """
         Fetch an Instance object from the server
 
@@ -129,15 +129,15 @@ class ComputingConnection(TiktalikAuthConnection):
         :return: an Instance object that represents the instance specified by UUID
         """
 
-        response = self.request(
+        response = self._request(
             "GET",
             "/instance/" + uuid,
             query_params={"actions": actions, "vpsimage": vpsimage, "cost": cost},
         )
         return Instance(self, response)
 
-    def get_instance_block_devices(self, uuid):
-        """ Fetch an Instances block devices from the server
+    def get_instance_block_devices(self, uuid: str):
+        """Fetch an Instances block devices from the server
 
         :type uuid: string
         :param uuid: Instance UUID
@@ -145,10 +145,10 @@ class ComputingConnection(TiktalikAuthConnection):
         :rtype: List[BlockDevice]
         """
 
-        response = self.request("GET", "/instance/" + uuid + "/blockdevice")
+        response = self._request("GET", "/instance/" + uuid + "/blockdevice")
         return [BlockDevice(self, b) for b in response]
 
-    def get_image(self, image_uuid):
+    def get_image(self, image_uuid: str):
         """
         Fetch a VPSImage object from the server
 
@@ -159,11 +159,17 @@ class ComputingConnection(TiktalikAuthConnection):
         :return: a VPSImage object that represents the image specified by UUID
         """
 
-        response = self.request("GET", "/image/" + image_uuid)
+        response = self._request("GET", "/image/" + image_uuid)
         return VPSImage(self, response)
 
     def create_instance(
-        self, hostname, size, image_uuid, networks, ssh_key=None, disk_size_gb=None
+        self,
+        hostname: str,
+        size: str,
+        image_uuid: str,
+        networks: list[str],
+        ssh_key: Optional[str] = None,
+        disk_size_gb: Optional[int] = None,
     ):
         """
         Create a new instance.
@@ -190,8 +196,12 @@ class ComputingConnection(TiktalikAuthConnection):
         :param disk_size_gb: for standard instances must set disk size in GB
         """
 
-        params = dict(hostname=hostname, size=size, image_uuid=image_uuid)
-        params["networks[]"] = networks
+        params: dict[str, str | list[str] | int] = {
+            "hostname": hostname,
+            "size": size,
+            "image_uuid": image_uuid,
+            "networks[]": networks,
+        }
 
         if ssh_key and ssh_key != "":
             params["ssh_key"] = ssh_key
@@ -199,18 +209,18 @@ class ComputingConnection(TiktalikAuthConnection):
         if disk_size_gb and isinstance(disk_size_gb, int):
             params["disk_size_gb"] = disk_size_gb
 
-        return self.request("POST", "/instance", params)
+        return self._request("POST", "/instance", params)
 
-    def delete_instance(self, uuid):
+    def delete_instance(self, uuid: str):
         """
         Delete Tiktalik Instance specified by UUID.
 
         :type uuid: string
         :param uuid: UUID of the instance to be deleted
         """
-        self.request("DELETE", "/instance/%s" % uuid)
+        self._request("DELETE", "/instance/%s" % uuid)
 
-    def delete_image(self, uuid):
+    def delete_image(self, uuid: str):
         """
         Delete a VPSImage specified by UUID.
 
@@ -218,9 +228,9 @@ class ComputingConnection(TiktalikAuthConnection):
         :param uuid: UUID of the image to be deleted
         """
 
-        self.request("DELETE", "/image/%s" % uuid)
+        self._request("DELETE", "/image/%s" % uuid)
 
-    def add_network_interface(self, instance_uuid, network_uuid, seq):
+    def add_network_interface(self, instance_uuid: str, network_uuid: str, seq: int):
         """
         Attach a new network interface to an Instance. The Instance doesn't
         have to be stopped to perform this action. This action is performed
@@ -238,13 +248,13 @@ class ComputingConnection(TiktalikAuthConnection):
                     by the operating system's configuration, eg. "3" maps to "eth3"
         """
 
-        self.request(
+        self._request(
             "POST",
             "/instance/%s/interface" % instance_uuid,
             dict(network_uuid=network_uuid, seq=seq),
         )
 
-    def remove_network_interface(self, instance_uuid, interface_uuid):
+    def remove_network_interface(self, instance_uuid: str, interface_uuid: str):
         """
         Detach a network interface from an Instance.
 
@@ -255,11 +265,11 @@ class ComputingConnection(TiktalikAuthConnection):
         :param interface_uuid: UUID of the Interface to be removed
         """
 
-        self.request(
+        self._request(
             "DELETE", "/instance/%s/interface/%s" % (instance_uuid, interface_uuid)
         )
 
-    def rename_image(self, uuid, name):
+    def rename_image(self, uuid: str, name: str):
         """
         Rename an image.
 
@@ -273,7 +283,7 @@ class ComputingConnection(TiktalikAuthConnection):
 
         params = dict(image_name=name)
 
-        self.request(
+        self._request(
             "POST",
             "/image/%s/set_name" % uuid,
             params,

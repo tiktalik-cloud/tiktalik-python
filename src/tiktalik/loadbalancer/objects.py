@@ -20,7 +20,6 @@
 
 # -*- coding: utf8 -*-
 
-from ..error import TiktalikAPIError
 from ..apiobject import APIObject
 
 __all__ = ["LoadBalancer", "LoadBalancerBackend", "LoadBalancerAction"]
@@ -28,7 +27,7 @@ __all__ = ["LoadBalancer", "LoadBalancerBackend", "LoadBalancerAction"]
 
 class LoadBalancer(APIObject):
     """A LoadBalancer instance. Contains a list of domains and backends,
-    and optionally a history of operations performed on this instance.
+    and optionally, a history of operations performed on this instance.
 
     Gives access to all API calls that operate on the Tiktalik LoadBalancer service.
     """
@@ -45,24 +44,24 @@ class LoadBalancer(APIObject):
     def __str__(self):
         return "<LoadBalancer:(%s) %s>" % (self.uuid, self.name)
 
-    @classmethod
-    def list_all(cls, conn, history=False):
+    @staticmethod
+    def list_all(conn, history=False):
         """
         :seealso: ComputingConnection.list_loadbalancers()
         """
 
         return conn.list_loadbalancers(history=history)
 
-    @classmethod
-    def create(cls, conn, *args, **kwargs):
+    @staticmethod
+    def create(conn, *args, **kwargs):
         """
         :seealso: ComputingConnection.create_loadbalancer()
         """
 
         return conn.create_loadbalancer(*args, **kwargs)
 
-    @classmethod
-    def get(cls, conn, uuid):
+    @staticmethod
+    def get(conn, uuid):
         """
         :seealso: ComputingConnection.get_loadbalancer()
         """

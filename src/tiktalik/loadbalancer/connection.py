@@ -1,4 +1,7 @@
 """Module tiktalik.loadbalancer.connection"""
+
+from typing import Literal, Optional
+
 # Copyright (c) 2013 Techstorage sp. z o.o.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -18,24 +21,30 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-from .objects import *
+from .objects import LoadBalancer
 from ..connection import TiktalikAuthConnection
 
 
 class LoadBalancerConnection(TiktalikAuthConnection):
-    def base_url(self):
+    def _base_url(self):
         return "/api/v1/loadbalancer"
 
     def list_loadbalancers(self, history=False):
-        response = self.request("GET", "", query_params=dict(history=history))
+        response = self._request("GET", "", query_params=dict(history=history))
         return [LoadBalancer(self, i) for i in response]
 
-    def get_loadbalancer(self, uuid):
-        response = self.request("GET", "/%s" % uuid)
+    def get_loadbalancer(self, uuid: str):
+        response = self._request("GET", "/%s" % uuid)
         return LoadBalancer(self, response)
 
     def create_loadbalancer(
-        self, name, proto, address=None, port=None, backends=None, domains=None
+        self,
+        name: str,
+        proto: Literal["TCP"] | Literal["HTTP"] | Literal["HTTPS"],
+        address: Optional[str] = None,
+        port: Optional[int] = None,
+        backends: Optional[list[tuple[str, int, int]]] = None,
+        domains: Optional[list[str]] = None,
     ):
         """
         Create new load balancer instance
@@ -59,11 +68,14 @@ class LoadBalancerConnection(TiktalikAuthConnection):
         :param domains: list of domains, only for HTTP proto balancing
         """
 
-        params = {
+        params: dict[str, str | int | list[str]] = {
             "name": name,
             "type": proto,
-            "backends[]": ["%s:%i:%i" % b for b in backends],
         }
+        if isinstance(backends, list):
+            params["backends[]"] = ["%s:%i:%i" % b for b in backends]
+        else:
+            params["backends[]"] = []
         if address:
             params["address"] = address
         if port:
@@ -71,5 +83,5 @@ class LoadBalancerConnection(TiktalikAuthConnection):
         if domains:
             params["domains[]"] = domains
 
-        response = self.request("POST", "", params)
+        response = self._request("POST", "", params)
         return LoadBalancer(self, response)

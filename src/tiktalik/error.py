@@ -29,7 +29,7 @@ class TiktalikAPIError(Exception):
         description: string - error description returned by the server (might be None)
     """
 
-    def __init__(self, http_status, data=None):
+    def __init__(self, http_status: int, data=None):
         self.http_status = http_status
         self.data = data
 

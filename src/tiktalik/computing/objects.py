@@ -43,8 +43,8 @@ class Network(APIObject):
     def __str__(self):
         return "<Network:(%s): %s>" % (self.uuid, self.name)
 
-    @classmethod
-    def list_all(cls, conn):
+    @staticmethod
+    def list_all(conn):
         """
         :seealso: ComputingConnection.list_networks()
         """
@@ -91,16 +91,16 @@ class VPSImage(APIObject):
     def __str__(self):
         return "<VPSImage:(%s) %s>" % (self.uuid, self.name)
 
-    @classmethod
-    def list_all(cls, conn):
+    @staticmethod
+    def list_all(conn):
         """
         :seealso: ComputingConnection.list_images()
         """
 
         return conn.list_images()
 
-    @classmethod
-    def get(cls, conn, uuid):
+    @staticmethod
+    def get(conn, uuid):
         """
         :seealso: ComputingConnection.get_image()
         """
@@ -131,8 +131,7 @@ class Operation(APIObject):
 
 
 class BlockDevice(APIObject):
-    """ Represents an Instance's attached block device.
-    """
+    """Represents an Instance's attached block device."""
 
     def __str__(self):
         return "<BlockDevice:(%s) size=%s GB, seq=%d>" % (
@@ -180,16 +179,16 @@ class Instance(APIObject):
         if self.vpsimage:
             self.vpsimage = VPSImage(conn, self.vpsimage)
 
-    @classmethod
-    def get_by_uuid(cls, conn, uuid, actions=False, vpsimage=False, cost=False):
+    @staticmethod
+    def get_by_uuid(conn, uuid, actions=False, vpsimage=False, cost=False):
         """
         :seealso: ComputingConnection.get_instance()
         """
 
         return conn.get_instance(uuid, actions, vpsimage, cost)
 
-    @classmethod
-    def get_by_hostname(cls, conn, hostname, actions=False, vpsimage=False, cost=False):
+    @staticmethod
+    def get_by_hostname(conn, hostname, actions=False, vpsimage=False, cost=False):
         """
         Fetch a list of instances with matching hostname.
         Raise TiktalikAPIError when there is no match.
@@ -210,8 +209,8 @@ class Instance(APIObject):
             raise TiktalikAPIError(404)
         return instances
 
-    @classmethod
-    def list_all(cls, conn, actions=False, vpsimage=False, cost=False):
+    @staticmethod
+    def list_all(conn, actions=False, vpsimage=False, cost=False):
         """
         :seealso: ComputingConnection.list_instances()
         """

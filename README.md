@@ -22,7 +22,7 @@ Use pip to install the latest stable version:
 
 ## Requirements
 
- * Python >=3.5
+ * Python >=3.10
  * no additional modules are required.
 
 ## Documentation

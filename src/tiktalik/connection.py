@@ -20,32 +20,53 @@
 
 # -*- coding: utf8 -*-
 import time
-import http.client
 import hmac
 import base64
+import typing
+from typing import Optional
 from urllib import parse
-import json
 import string
 from hashlib import sha1, md5
+
+import httpx
+from httpx import Headers, Response
+
 from .error import TiktalikAPIError
+from abc import ABC, abstractmethod
 
 
-class TiktalikAuthConnection:
+class TiktalikAuthConnection(ABC):
     """
     Simple wrapper for HTTPConnection. Adds authentication information to requests.
     """
 
     def __init__(
-        self, api_key, api_secret_key, host="tiktalik.com", port=443, use_ssl=True
+        self,
+        api_key: str,
+        api_secret_key: str,
+        host="tiktalik.com",
+        port=443,
+        use_ssl=True,
+        http_proxy: Optional[str] = None,
+        https_proxy: Optional[str] = None,
     ):
         self.api_key = api_key
         self.api_secret_key = api_secret_key
         self.host = host
         self.port = port
+        self.use_ssl = use_ssl
+        self.timeout = 20
 
-        # backward compability: secret_key is known as a base64 string, but it's used
-        # internally as a binary decoded string. A long time ago this function as input
-        # needed secret key decoded to binary string, so now try to handle both input
+        self.proxy_mounts: dict[str, Optional[httpx.BaseTransport]] = {}
+
+        if http_proxy:
+            self.proxy_mounts["http://"] = httpx.HTTPTransport(proxy=http_proxy)
+        if https_proxy:
+            self.proxy_mounts["https://"] = httpx.HTTPTransport(proxy=https_proxy)
+
+        # Backwards compatibility: secret_key is known as a base64 string, but it's used
+        # internally as a binary decoded string. A long time ago this function took as input
+        # a secret key decoded to binary string, so now try to handle both input
         # forms: deprecated decoded one and "normal" encoded as base64.
         try:
             if (
@@ -60,25 +81,21 @@ class TiktalikAuthConnection:
         except TypeError:
             pass
 
-        if use_ssl:
-            self.conn_cls = http.client.HTTPSConnection
-        else:
-            self.conn_cls = http.client.HTTPConnection
-
-        self.use_ssl = use_ssl
-
-        self.timeout = 20
-        self.conn = None
-
-    def _encode_param(self, value):
+    def __encode_param(self, value):
         if isinstance(value, list):
-            return list(map(self._encode_param, value))
+            return list(map(self.__encode_param, value))
         elif isinstance(value, str):
             return value.encode("utf8")
 
         return value
 
-    def request(self, method, path, params=None, query_params=None):
+    def _request(
+        self,
+        method: str,
+        path: str,
+        params: Optional[dict[str, str | list[str] | int]] = None,
+        query_params: Optional[dict[str, str | bool]] = None,
+    ) -> typing.Any:
         """
         Send a request over HTTP. The inheriting class must override self.base_url().
 
@@ -99,51 +116,41 @@ class TiktalikAuthConnection:
                  Raw data otherwise. None, if the reply was empty.
         """
 
-        response = self.make_request(
-            method, self.base_url() + path, params=params, query_params=query_params
+        response = self.__make_request(
+            method, self._base_url() + path, params=params, query_params=query_params
         )
 
-        data = response.read()
-        if response.getheader("Content-Type", "").startswith("application/json"):
-            data = json.loads(data)
+        data = response.text
 
-        if response.status != 200:
-            raise TiktalikAPIError(response.status, data)
+        content_type_header = response.headers.get("Content-Type", "")
+        assert isinstance(content_type_header, str), (
+            "Failed to get Content-Type header!"
+        )
+        if content_type_header.startswith("application/json"):
+            data = response.json()
+
+        if response.status_code != httpx.codes.OK:
+            raise TiktalikAPIError(response.status_code, data)
 
         return data
 
-    def base_url(self):
-        """
-        :rtype: string
-        :return: base URL for API requests, eg. "/api/v1/computing".
-                 Must NOT include trailing slash.
-        """
+    @abstractmethod
+    def _base_url(self):
+        pass
 
-        raise NotImplementedError()
-
-    def make_request(
-        self, method, path, headers=None, body=None, params=None, query_params=None
-    ):
+    def __make_request(
+        self,
+        method: str,
+        path: str,
+        params: Optional[dict[str, str | list[str] | int]] = None,
+        query_params: Optional[dict[str, str | bool]] = None,
+    ) -> Response:
         """
-        Sends request, returns httplib.HTTPResponse.
-
         If `params` is provided, it should be a dict that contains form parameters.
         Content-Type is forced to "application/x-www-form-urlencoded" in this case.
         """
 
-        if params and body:
-            raise ValueError("Both `body` and `params` can't be provided.")
-
-        headers = headers or {}
-
-        if params:
-            params = dict(
-                (k.encode("utf8"), self._encode_param(v))
-                for (k, v) in params.items()
-            )
-            body = parse.urlencode(params, True)
-            headers["content-type"] = "application/x-www-form-urlencoded"
-
+        original_path = path
         path = parse.quote(path.encode("utf8"))
 
         if query_params:
@@ -152,35 +159,52 @@ class TiktalikAuthConnection:
                 if isinstance(value, bool):
                     qp[key] = "true" if value else "false"
                 else:
-                    # assert isinstance(value, (str, int))
-                    qp[key.encode("utf8")] = self._encode_param(value)
+                    qp[key.encode("utf8")] = self.__encode_param(value)
 
             qp = parse.urlencode(qp, True)
             path = "%s?%s" % (path, qp)
 
-        if body:
-            m = md5(body.encode("utf-8"))
-            headers["content-md5"] = m.hexdigest()
+        scheme: str = ""
 
-        conn = self.conn_cls(self.host, self.port, timeout=self.timeout)
-        headers = self._add_auth_header(method, path, headers or {})
-        # conn.set_debuglevel(3)
-        conn.request(method, path, body, headers)
+        if self.use_ssl:
+            scheme = "https"
+        else:
+            scheme = "http"
 
-        response = conn.getresponse()
-        return response
+        url = scheme + "://" + self.host + ":" + str(self.port) + original_path
 
-    def _add_auth_header(self, method, path, headers):
+        with httpx.Client(
+            verify=self.use_ssl, timeout=self.timeout, mounts=self.proxy_mounts
+        ) as client:
+            request = client.build_request(
+                method, url, data=params, params=query_params
+            )
+
+            if params:
+                body_checksum = md5(parse.urlencode(params, True).encode("utf-8"))
+                request.headers["Content-MD5"] = body_checksum.hexdigest()
+
+            request.headers = self.__add_auth_header(method, path, request.headers)
+            response = client.send(request)
+            return response
+
+    def __add_auth_header(self, method: str, path: str, headers: Headers) -> Headers:
         if "date" not in headers:
             headers["date"] = time.strftime("%a, %d %b %Y %X GMT", time.gmtime())
 
-        S = self._canonical_string(method, path, headers)
-        headers["Authorization"] = "TKAuth %s:%s" % (self.api_key, self._sign_string(S))
+        canonical_string = TiktalikAuthConnection.__canonical_string(
+            method, path, headers
+        )
+        headers["Authorization"] = "TKAuth %s:%s" % (
+            self.api_key,
+            self.__sign_string(canonical_string),
+        )
 
         return headers
 
-    def _canonical_string(self, method, path, headers):
-        S = "\n".join(
+    @staticmethod
+    def __canonical_string(method: str, path: str, headers) -> str:
+        return "\n".join(
             (
                 method,
                 headers.get("content-md5", ""),
@@ -189,10 +213,11 @@ class TiktalikAuthConnection:
                 path,
             )
         )
-        return S
 
-    def _sign_string(self, S):
+    def __sign_string(self, canonical_string: str) -> str:
         digest = base64.b64encode(
-            hmac.new(self.api_secret_key, S.encode("utf-8"), sha1).digest()
+            hmac.new(
+                self.api_secret_key, canonical_string.encode("utf-8"), sha1
+            ).digest()
         )
         return digest.decode("utf-8")
